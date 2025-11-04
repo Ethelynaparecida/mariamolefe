@@ -24,14 +24,23 @@
 
     <ul class="video-list" *ngIf="!isLoading && searchResults.length > 0">
 
-      <li *ngFor="let video of searchResults" class="video-item">
-        <div class="video-info">
-          <h4 class="video-title" [innerHTML]="video.snippet.title"></h4>
-          <p class="video-channel" [innerHTML]="video.snippet.channelTitle"></p>
-        </div>
-      </li>
+  <li *ngFor="let video of searchResults" class="video-item">
+    
+    <img [src]="video.snippet.thumbnails.default.url" 
+         [alt]="video.snippet.title" 
+         class="video-thumbnail">
 
-    </ul>
+    <div class="video-info">
+      <h4 class="video-title" [innerHTML]="video.snippet.title"></h4>
+      <p class="video-channel" [innerHTML]="video.snippet.channelTitle"></p>
+    </div>
+
+    <button (click)="adicionarMusica(video)" class="add-button">
+      Adicionar
+    </button>
+
+  </li>
+</ul>
 
   </div>
 
