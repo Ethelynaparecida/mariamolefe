@@ -1,0 +1,38 @@
+<div class="search-container">
+  <h2>Buscar Música</h2>
+  <p>Encontre o karaokê da sua música favorita no YouTube.</p>
+
+  <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+    <div class="form-group">
+      <input type="text" formControlName="query" placeholder="Nome da música ou artista...">
+      <button type="submit" [disabled]="searchForm.invalid || isLoading">
+        <span *ngIf="!isLoading">Buscar</span>
+        <span *ngIf="isLoading">Buscando...</span>
+      </button>
+    </div>
+  </form>
+
+  <div class="results-container">
+
+    <div *ngIf="isLoading" class="loading-spinner">
+      <p>Procurando...</p>
+    </div>
+
+    <div *ngIf="!isLoading && searchPerformed && searchResults.length === 0" class="no-results">
+      <p>Nenhum vídeo encontrado para sua busca. Tente outros termos.</p>
+    </div>
+
+    <ul class="video-list" *ngIf="!isLoading && searchResults.length > 0">
+
+      <li *ngFor="let video of searchResults" class="video-item">
+        <div class="video-info">
+          <h4 class="video-title" [innerHTML]="video.snippet.title"></h4>
+          <p class="video-channel" [innerHTML]="video.snippet.channelTitle"></p>
+        </div>
+      </li>
+
+    </ul>
+
+  </div>
+
+</div>

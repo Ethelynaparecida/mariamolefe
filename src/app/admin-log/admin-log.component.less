@@ -1,0 +1,70 @@
+.log-container {
+  max-width: 1200px;
+  margin: 30px auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  
+  h2 { text-align: center; }
+  .loading, .error { text-align: center; padding: 20px; font-size: 1.2em; }
+  .error { color: red; }
+  .header {
+    display: flex;
+    justify-content: space-between; // Coloca o título de um lado, botão do outro
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    
+    h2 { 
+      text-align: left; 
+      margin: 0;
+      font-size: 1.8em;
+    }
+    
+    .btn-voltar {
+      display: inline-block;
+      padding: 10px 18px;
+      background-color: #6c757d; // Cor de "voltar" (cinza)
+      color: white !important; // Garante que o texto é branco
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      
+      &:hover {
+        background-color: #5a6268;
+      }
+    }
+  }
+}
+
+.log-table-wrapper {
+  overflow-x: auto; // Permite scroll horizontal em telemóveis
+}
+
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    font-size: 0.9em;
+  }
+
+  th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+  }
+
+  tbody tr:nth-child(odd) {
+    background-color: #f9f9f9;
+  }
+  
+  td a {
+    color: #007bff;
+    text-decoration: none;
+    &:hover { text-decoration: underline; }
+  }
+}

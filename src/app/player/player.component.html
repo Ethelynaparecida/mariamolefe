@@ -1,0 +1,21 @@
+<div class="player-wrapper">
+
+  <div id="youtube-player-div"></div>
+
+  <div classs="overlay" *ngIf="isWaiting">
+    <div class="waiting-content">
+      <div class="spinner"></div>
+      <h2>Aguardando músicas na fila...</h2>
+      <p>Adicione uma música pelo seu celular!</p>
+    </div>
+  </div>
+
+  <div class="overlay now-playing" *ngIf="videoAtual">
+  <div class="now-playing-content">
+    <p>Tocando:</p>
+    <h4 [innerHTML]="videoAtual.titulo || 'Carregando Título...'"></h4>
+    <h4>Pedido por: {{ videoAtual.nomeUsuario || 'Alguém' }}</h4>
+  </div>
+</div>
+
+</div>

@@ -1,0 +1,84 @@
+import { Injectable } from '@angular/core'; 
+import { Router } from '@angular/router';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class LoginService {
+
+  private readonly USER_STORAGE_KEY = 'karaoke_user';
+  private readonly POSITION_STORAGE_KEY = 'karaoke_position';
+
+  constructor(
+    private router: Router,
+   
+  ) {
+    
+  }
+
+  salvarLogin(userData: { nome: string; email: string; cpf: string }): void {
+    
+      try {
+        localStorage.setItem(this.USER_STORAGE_KEY, JSON.stringify(userData));
+      } catch (e) {
+        console.error("Erro ao salvar dados no localStorage:", e);
+      }
+    
+  }
+
+  getUsuarioLogado(): { nome: string; email: string; cpf: string } | null {
+ 
+      try {
+        const userData = localStorage.getItem(this.USER_STORAGE_KEY);
+        if (userData) {
+          return JSON.parse(userData);
+        }
+      } catch (e) {
+        console.error("Erro ao ler dados do localStorage:", e);
+      }
+    
+    return null; 
+  }
+
+  estaLogado(): boolean {
+    return this.getUsuarioLogado() !== null;
+  }
+
+  fazerLogout(): void {
+  
+      try {
+        localStorage.removeItem(this.USER_STORAGE_KEY);
+        localStorage.removeItem(this.POSITION_STORAGE_KEY);
+        this.router.navigate(['/login']);
+      } catch (e) {
+        console.error("Erro ao fazer logout:", e);
+      }
+    
+  }
+
+  salvarPosicao(posicao: number | string | null): void {
+   
+      if (posicao === null || posicao === undefined) {
+        localStorage.removeItem(this.POSITION_STORAGE_KEY);
+      } else {
+        localStorage.setItem(this.POSITION_STORAGE_KEY, String(posicao));
+      }
+    
+  }
+
+  getPosicao(): string | null {
+  
+      return localStorage.getItem(this.POSITION_STORAGE_KEY);
+    }
+
+  
+
+  estaNaFila(): boolean {
+    const pos = this.getPosicao();
+    if (!pos) {
+      return false;
+    }
+    const posNum = parseInt(pos, 10);
+    return !isNaN(posNum) && posNum >= 0; 
+  }
+}

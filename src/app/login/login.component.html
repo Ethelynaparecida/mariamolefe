@@ -1,0 +1,55 @@
+<div class="login-container">
+  <h2>Entrar no Karaokê</h2>
+  <p>Por favor, identifique-se para adicionar músicas à fila.</p>
+
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+    <div class="form-group">
+      <label for="nome">Nome Completo</label>
+      <input id="nome" type="text" formControlName="nome" placeholder="Seu nome e sobrenome">
+      
+      <div *ngIf="nome?.invalid && (nome?.dirty || nome?.touched)" class="error-message">
+        <span *ngIf="nome?.errors?.['required']">
+          O nome é obrigatório.
+        </span>
+        <span *ngIf="nome?.errors?.['nomeIncompleto'] && !nome?.errors?.['required']">
+          Por favor, insira seu nome e sobrenome.
+        </span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input id="email" type="email" formControlName="email" placeholder="seu.email@exemplo.com">
+      
+      <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
+        <span *ngIf="email?.errors?.['required']">
+          O email é obrigatório.
+        </span>
+        <span *ngIf="email?.errors?.['email']">
+          Por favor, insira um email válido.
+        </span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="cpf">CPF</label>
+      <input id="cpf" type="text" formControlName="cpf" placeholder="Apenas números">
+      
+      <div *ngIf="cpf?.invalid && (cpf?.dirty || cpf?.touched)" class="error-message">
+        <span *ngIf="cpf?.errors?.['required']">
+          O CPF é obrigatório.
+        </span>
+        <span *ngIf="cpf?.errors?.['minlength'] || cpf?.errors?.['maxlength']">
+          O CPF deve conter exatamente 11 dígitos.
+        </span>
+        <span *ngIf="cpf?.errors?.['cpfInvalido'] && !cpf?.errors?.['required']">
+          Este número de CPF não é válido.
+        </span>
+      </div>
+    </div>
+
+    <button type="submit" [disabled]="loginForm.invalid">Entrar</button>
+
+  </form>
+</div>

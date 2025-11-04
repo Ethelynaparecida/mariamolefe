@@ -1,0 +1,22 @@
+<div class="player-login-container">
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <h2>Acesso Restrito ao Player</h2>
+    <p>Por favor, insira o PIN de Administrador para continuar.</p>
+    
+    <div class="form-group">
+      <label for="pin">PIN</label>
+      <input 
+        id="pin" 
+        type="password" 
+        formControlName="pin" 
+        placeholder="****"
+        [class.invalid]="loginError">
+    </div>
+
+    <div *ngIf="loginError" class="error-message">
+      PIN inválido. Tente novamente.
+    </div>
+
+    <button type="submit" [disabled]="loginForm.invalid">Entrar</button>
+  </form>
+</div>
