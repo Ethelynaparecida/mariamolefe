@@ -5,13 +5,13 @@
   </div>
 
   <a href="/player" target="_blank" class="btn-link btn-tv">
-          📺 Abrir Ecrã da TV (Player)
-        </a>
+    📺 Abrir Ecrã da TV (Player)
+  </a>
   <div class="panels-wrapper">
-    
+
     <div class="panel controls-panel">
       <h3>Controlos</h3>
-      
+
       <div class="button-group">
         <button *ngIf="!isPaused" class="btn-pause" (click)="pause()">
           Pausar Música
@@ -19,11 +19,15 @@
         <button *ngIf="isPaused" class="btn-play" (click)="play()">
           Continuar Música
         </button>
-     
+
         <button class="btn-skip" (click)="skip()" [disabled]="!currentSong">
           Pular Música Atual
         </button>
+         <button class="btn-restart" (click)="restart()" [disabled]="!currentSong">
+          Recomeçar Música
+        </button>
       </div>
+     
 
       <div class="links-section">
         <a routerLink="/admin/log" class="btn-link">Ver Histórico de Músicas</a>
@@ -32,34 +36,34 @@
 
     <div class="panel queue-panel">
       <h3>Fila de Músicas</h3>
-      
+
       <div class="queue-section">
         <h4>Tocando Agora</h4>
         <div *ngIf="currentSong; else filaVazia" class="queue-item current">
-        <span class="q-title" [innerHTML]="currentSong.titulo"></span>
+          <span class="q-title" [innerHTML]="currentSong.titulo"></span>
           <span class="q-user"> | Por {{ currentSong.nomeUsuario }}</span>
         </div>
       </div>
-      
+
       <div class="queue-section">
         <h4>Próximas na Fila</h4>
         <div *ngIf="upcomingSongs.length > 0; else proximasVazia">
           <ol class="queue-list">
             <li *ngFor="let song of upcomingSongs" class="queue-item">
-             <span class="q-title" [innerHTML]="song.titulo"> </span>
+              <span class="q-title" [innerHTML]="song.titulo"> </span>
               <span class="q-user"> | Por {{ song.nomeUsuario }}</span>
             </li>
           </ol>
         </div>
       </div>
-      
+
       <ng-template #filaVazia>
         <p class="empty-text">A fila de músicas está vazia.</p>
       </ng-template>
       <ng-template #proximasVazia>
         <p class="empty-text">Nenhuma música na fila de espera.</p>
       </ng-template>
-      
+
     </div>
   </div>
 </div>

@@ -83,6 +83,20 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  restart(): void {
+    if (confirm('Tem a certeza que quer recomeçar a música atual?')) {
+      this.apiService.restartPlayer().subscribe({
+        next: () => {
+          this.mostrarFeedback('Música reiniciada!');
+          this.play(); 
+        },
+        error: (err) => {
+          this.mostrarFeedback('Erro ao reiniciar a música.');
+        }
+      });
+    }
+  }
+
   forceRefresh(): void {
     if (this.adminPoll) {
       this.adminPoll.unsubscribe();

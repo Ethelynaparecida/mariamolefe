@@ -27,12 +27,14 @@ export class PlayerComponent implements OnInit, OnDestroy {
   private statusCheckSubscription: Subscription | null = null;
   private isLocallyPaused: boolean = false;
   private readonly STATUS_POLLING_INTERVAL_MS = 2000;
+  private lastRestartHandledTime: number = 0;
+  private lastSkipHandledTime: number = 0;
 
   constructor(private apiService: ApiService, private ngZone: NgZone) {}
 
   ngOnInit(): void {
     this.loadYouTubeApi();
-    this.startStatusPolling();
+    //this.startStatusPolling();
   }
 
   loadYouTubeApi(): void {
@@ -74,6 +76,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
   onPlayerReady(event: any): void {
     this.player.unMute();
     this.startVideoPolling();
+    this.startStatusPolling();
   }
 
   startVideoPolling(): void {
@@ -89,25 +92,28 @@ export class PlayerComponent implements OnInit, OnDestroy {
   async getNextVideo(): Promise<void> {
     if (this.isWaiting) {
       try {
-        const response = await firstValueFrom(
-          this.apiService.getProximaMusica()
-        );
+        const response = await firstValueFrom(this.apiService.getProximaMusica());
 
         this.ngZone.run(() => {
           if (response && response.videoId) {
             clearInterval(this.videoCheckInterval);
             this.videoAtual = response;
-            this.isWaiting = false;
+            this.isWaiting = false; 
+            
             this.player.loadVideoById(response.videoId);
-            this.player.unMute();
-            this.player.playVideo();
+            this.player.unMute(); 
+            
+            if (!this.isLocallyPaused) {
+                this.player.playVideo();
+            }
+            
           } else {
             this.videoAtual = null;
             this.isWaiting = true;
           }
         });
-      } catch (error) {
-        console.error('Erro ao buscar próxima música:', error);
+      } catch (error: any) {
+        console.error("Erro ao buscar próxima música:", error);
         this.ngZone.run(() => {
           this.isWaiting = true;
         });
@@ -117,28 +123,28 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
   onPlayerStateChange(event: any): void {
     if (event.data === YT.PlayerState.ENDED) {
-      const videoIdQueTerminou = this.videoAtual?.videoId;
+      
+      const videoIdQueTerminou = this.videoAtual?.videoId; 
       if (!videoIdQueTerminou) return;
 
-      console.log('Música terminada:', videoIdQueTerminou);
+      console.log("Música terminada (Fim Natural):", videoIdQueTerminou);
 
+      this.isLocallyPaused = true; 
+      
       this.ngZone.run(() => {
         this.isWaiting = true;
         this.videoAtual = null;
-        this.startVideoPolling();
+        this.startVideoPolling(); 
       });
 
       this.apiService.musicaTerminada(videoIdQueTerminou).subscribe({
-        next: () => {
-          console.log('Backend notificado (em segundo plano).');
-        },
-        error: (err) => {
-          console.error('Erro ao notificar backend (em segundo plano):', err);
-        },
+        next: () => console.log("Backend notificado (Fim Natural)."),
+        error: (err) => console.error("Erro ao notificar backend:", err)
       });
     }
   }
-  startStatusPolling(): void {
+
+ startStatusPolling(): void {
     if (this.statusCheckSubscription) return;
 
     this.statusCheckSubscription = interval(this.STATUS_POLLING_INTERVAL_MS)
@@ -146,33 +152,54 @@ export class PlayerComponent implements OnInit, OnDestroy {
         startWith(0),
         switchMap(() => this.apiService.getPlayerStatus())
       )
-      .subscribe((status: { isPaused: boolean }) => {
+      .subscribe((status: { 
+          isPaused: boolean; 
+          lastRestartRequestTime: number; 
+          lastSkipRequestTime: number; 
+      }) => {
         this.ngZone.run(() => {
+          
+          if (status.lastRestartRequestTime > this.lastRestartHandledTime) {
+            console.log("COMANDO DE REINÍCIO RECEBIDO");
+            this.player.seekTo(0); 
+            this.lastRestartHandledTime = status.lastRestartRequestTime;
+          }
+
+          if (status.lastSkipRequestTime > this.lastSkipHandledTime) {
+            console.log("COMANDO DE 'PULAR' RECEBIDO (via timestamp)");
+            
+            this.lastSkipHandledTime = status.lastSkipRequestTime;
+            this.isWaiting = true; 
+            this.isLocallyPaused = false;
+            this.startVideoPolling(); 
+          }
           this.handlePauseState(status.isPaused);
         });
       });
   }
   handlePauseState(serverIsPaused: boolean): void {
+    
     if (serverIsPaused && !this.isLocallyPaused) {
-      console.log('PAUSANDO (via admin)');
+      console.log("PAUSANDO (via admin)");
       this.player.pauseVideo();
       this.isLocallyPaused = true;
-
+      
       if (this.videoCheckInterval) {
         clearInterval(this.videoCheckInterval);
         this.videoCheckInterval = null;
       }
     }
-
-    if (!serverIsPaused && this.isLocallyPaused) {
-      console.log('A TOCAR (via admin)');
+    
+    if (!serverIsPaused && this.isLocallyPaused) { 
+      console.log("A TOCAR (via admin)");
       this.player.playVideo();
       this.isLocallyPaused = false;
-
+      
       if (!this.videoCheckInterval && this.isWaiting) {
         this.startVideoPolling();
       }
     }
+    
   }
 
   ngOnDestroy(): void {

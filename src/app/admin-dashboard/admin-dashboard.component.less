@@ -30,7 +30,14 @@
   }
   
   .btn-pause { background-color: #ffc107; } // Amarelo
-  .btn-play { background-color: #28a745; } // Verde
+  .btn-play { background-color: #28a745; }
+  .btn-skip{ background-color: #2032d2; } 
+  .btn-restart {
+    background-color: #17a2b8; // Ciano
+    color: white;
+    &:hover { background-color: #138496; }
+    &:disabled { background-color: #8ac6bb; }
+  }
   
   .feedback {
     margin-top: 15px;
@@ -58,7 +65,7 @@
     .btn-link {
       display: inline-block;
       padding: 12px 15px;
-      color: white !important; // !important para garantir
+      color: white !important; 
       text-decoration: none;
       border-radius: 5px;
       text-align: center;

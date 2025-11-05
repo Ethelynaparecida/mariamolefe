@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class ApiService {
 
-  private readonly BASE_URL = /* 'http://localhost:8080/api'; */'https://mariamole.onrender.com/api';
+  private readonly BASE_URL =  /*'http://localhost:8080/api'; */  'https://mariamole.onrender.com/api';
 
   constructor(private http: HttpClient) { }
 
@@ -48,6 +48,10 @@ export class ApiService {
 
   playPlayer(): Observable<any> {
     return this.http.post(`${this.BASE_URL}/admin/player/play`, {});
+  }
+
+  restartPlayer(): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/admin/player/restart`, {});
   }
 
   getPlayerStatus(): Observable<any> {
