@@ -125,21 +125,32 @@ export class PlayerComponent implements OnInit, OnDestroy {
     if (event.data === YT.PlayerState.ENDED) {
       
       const videoIdQueTerminou = this.videoAtual?.videoId; 
-      if (!videoIdQueTerminou) return;
+      if (!videoIdQueTerminou) return; // Segurança
 
       console.log("Música terminada (Fim Natural):", videoIdQueTerminou);
 
       this.isLocallyPaused = true; 
+            
       
-      this.ngZone.run(() => {
-        this.isWaiting = true;
-        this.videoAtual = null;
-        this.startVideoPolling(); 
-      });
-
       this.apiService.musicaTerminada(videoIdQueTerminou).subscribe({
-        next: () => console.log("Backend notificado (Fim Natural)."),
-        error: (err) => console.error("Erro ao notificar backend:", err)
+        
+        next: () => {
+          console.log("Backend notificado com sucesso. AGORA a procurar a próxima música.");
+          
+          this.ngZone.run(() => {
+            this.isWaiting = true;
+            this.videoAtual = null;
+            this.startVideoPolling(); 
+          });
+        },
+        error: (err) => {
+          console.error("Erro ao notificar backend:", err);
+          this.ngZone.run(() => {
+            this.isWaiting = true;
+            this.videoAtual = null;
+            this.startVideoPolling(); 
+          });
+        }
       });
     }
   }
