@@ -19,6 +19,12 @@
     display: flex;
     gap: 15px;
   }
+  :host ::ng-deep #youtube-player-div iframe {
+
+  filter: brightness(1.5);
+
+  
+}
   
   button {
     padding: 12px 20px;
@@ -33,10 +39,10 @@
   .btn-play { background-color: #28a745; }
   .btn-skip{ background-color: #2032d2; } 
   .btn-restart {
-    background-color: #17a2b8; // Ciano
+    background-color: #068295; // Ciano
     color: white;
     &:hover { background-color: #138496; }
-    &:disabled { background-color: #8ac6bb; }
+    &:disabled { background-color: #2d514b; }
   }
   
   .feedback {
