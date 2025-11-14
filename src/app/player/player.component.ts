@@ -1,41 +1,56 @@
+
 import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../service/api.service';
-import {
-  Subscription,
-  interval,
-  firstValueFrom,
-  switchMap,
-  startWith,
-} from 'rxjs';
+import { LoginService } from '../service/login.service'; 
+import { Subscription, interval, firstValueFrom, switchMap, startWith, takeUntil } from 'rxjs';
 
-declare var YT: any;
+declare var YT: any; 
 
 @Component({
   selector: 'app-player',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './player.component.html',
-  styleUrls: ['./player.component.less'],
+  styleUrls: ['./player.component.less']
 })
 export class PlayerComponent implements OnInit, OnDestroy {
-  public player: any;
-  public videoAtual: any = null;
-  public isWaiting: boolean = true;
-  private readonly POLLING_INTERVAL_MS = 5000;
-  private videoCheckInterval: any;
-  private statusCheckSubscription: Subscription | null = null;
-  private isLocallyPaused: boolean = false;
-  private readonly STATUS_POLLING_INTERVAL_MS = 2000;
-  private lastRestartHandledTime: number = 0;
-  private lastSkipHandledTime: number = 0;
 
-  constructor(private apiService: ApiService, private ngZone: NgZone) {}
+  public player: any; 
+
+  public videoAtual: any = null; 
+  public isWaiting: boolean = true; 
+
+  private videoCheckInterval: any; 
+  private readonly POLLING_INTERVAL_MS = 7000; 
+  
+  private statusCheckSubscription: Subscription | null = null; 
+  private readonly STATUS_POLLING_INTERVAL_MS = 3000; 
+  
+  private isLocallyPaused: boolean = false; 
+  private lastRestartHandledTime: number = 0; 
+  private lastSkipHandledTime: number = 0; 
+
+
+  constructor(
+    private apiService: ApiService,
+    private loginService: LoginService, 
+    private ngZone: NgZone 
+  ) {}
 
   ngOnInit(): void {
     this.loadYouTubeApi();
-    //this.startStatusPolling();
   }
+
+  ngOnDestroy(): void {
+    if (this.videoCheckInterval) {
+      clearInterval(this.videoCheckInterval);
+    }
+    if (this.statusCheckSubscription) {
+      this.statusCheckSubscription.unsubscribe();
+    }
+  }
+
 
   loadYouTubeApi(): void {
     if (!(window as any).YT) {
@@ -58,80 +73,40 @@ export class PlayerComponent implements OnInit, OnDestroy {
       height: '100%',
       width: '100%',
       playerVars: {
-        autoplay: 1,
-        controls: 0,
-        rel: 0,
-        fs: 0,
-        mute: 1,
-        iv_load_policy: 3,
-        modestbranding: 1,
+        'autoplay': 1,      // Autoplay
+        'controls': 0,      // Sem controlos
+        'rel': 0,           // Sem vídeos relacionados
+        'fs': 0,            // Sem botão de fullscreen
+        'mute': 1,          // Toca em mute para contornar restrições de autoplay
+        'iv_load_policy': 3, // Remove as "anotações" do vídeo
+        'modestbranding': 1  // Tenta remover o logo do YouTube
       },
       events: {
-        onReady: (event: any) => this.onPlayerReady(event),
-        onStateChange: (event: any) => this.onPlayerStateChange(event),
-      },
+        'onReady': (event: any) => this.onPlayerReady(event),
+        'onStateChange': (event: any) => this.onPlayerStateChange(event)
+      }
     });
   }
 
+
   onPlayerReady(event: any): void {
-    this.player.unMute();
+    console.log("Player do YouTube está PRONTO.");
+    this.player.unMute(); 
+    
     this.startVideoPolling();
+
     this.startStatusPolling();
-  }
-
-  startVideoPolling(): void {
-    if (this.videoCheckInterval) {
-      clearInterval(this.videoCheckInterval);
-    }
-    this.getNextVideo();
-    this.videoCheckInterval = setInterval(() => {
-      this.getNextVideo();
-    }, this.POLLING_INTERVAL_MS);
-  }
-
-  async getNextVideo(): Promise<void> {
-    if (this.isWaiting) {
-      try {
-        const response = await firstValueFrom(this.apiService.getProximaMusica());
-
-        this.ngZone.run(() => {
-          if (response && response.videoId) {
-            clearInterval(this.videoCheckInterval);
-            this.videoAtual = response;
-            this.isWaiting = false; 
-            
-            this.player.loadVideoById(response.videoId);
-            this.player.unMute(); 
-            
-            if (!this.isLocallyPaused) {
-                this.player.playVideo();
-            }
-            
-          } else {
-            this.videoAtual = null;
-            this.isWaiting = true;
-          }
-        });
-      } catch (error: any) {
-        console.error("Erro ao buscar próxima música:", error);
-        this.ngZone.run(() => {
-          this.isWaiting = true;
-        });
-      }
-    }
   }
 
   onPlayerStateChange(event: any): void {
     if (event.data === YT.PlayerState.ENDED) {
       
       const videoIdQueTerminou = this.videoAtual?.videoId; 
-      if (!videoIdQueTerminou) return; // Segurança
+      if (!videoIdQueTerminou) return; 
 
       console.log("Música terminada (Fim Natural):", videoIdQueTerminou);
 
       this.isLocallyPaused = true; 
-            
-      
       this.apiService.musicaTerminada(videoIdQueTerminou).subscribe({
         
         next: () => {
@@ -155,13 +130,58 @@ export class PlayerComponent implements OnInit, OnDestroy {
     }
   }
 
- startStatusPolling(): void {
+
+  startVideoPolling(): void {
+    if (this.videoCheckInterval) {
+      clearInterval(this.videoCheckInterval);
+      this.videoCheckInterval = null;
+    }
+    
+    this.getNextVideo(); 
+    this.videoCheckInterval = setInterval(() => {
+      this.getNextVideo();
+    }, this.POLLING_INTERVAL_MS);
+  }
+
+  async getNextVideo(): Promise<void> {
+    if (this.isWaiting) {
+      try {
+        const response = await firstValueFrom(this.apiService.getProximaMusica());
+
+        this.ngZone.run(() => {
+          if (response && response.videoId) {
+            clearInterval(this.videoCheckInterval); 
+            this.videoAtual = response;
+            this.isWaiting = false; 
+            this.player.loadVideoById(response.videoId);
+            this.player.unMute(); 
+            
+            if (!this.isLocallyPaused) {
+                this.player.playVideo();
+            }
+            
+          } else {
+            this.videoAtual = null;
+            this.isWaiting = true;
+          }
+        });
+      } catch (error: any) {
+        console.error("Erro ao buscar próxima música:", error);
+        this.ngZone.run(() => {
+          this.isWaiting = true;
+        });
+      }
+    }
+  }
+
+  startStatusPolling(): void {
     if (this.statusCheckSubscription) return;
 
     this.statusCheckSubscription = interval(this.STATUS_POLLING_INTERVAL_MS)
       .pipe(
         startWith(0),
-        switchMap(() => this.apiService.getPlayerStatus())
+        switchMap(() => this.apiService.getPlayerStatus()),
+        takeUntil(this.loginService.logout$) 
       )
       .subscribe((status: { 
           isPaused: boolean; 
@@ -178,16 +198,18 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
           if (status.lastSkipRequestTime > this.lastSkipHandledTime) {
             console.log("COMANDO DE 'PULAR' RECEBIDO (via timestamp)");
-            
             this.lastSkipHandledTime = status.lastSkipRequestTime;
+            
             this.isWaiting = true; 
             this.isLocallyPaused = false;
             this.startVideoPolling(); 
           }
+
           this.handlePauseState(status.isPaused);
         });
       });
   }
+  
   handlePauseState(serverIsPaused: boolean): void {
     
     if (serverIsPaused && !this.isLocallyPaused) {
@@ -209,16 +231,6 @@ export class PlayerComponent implements OnInit, OnDestroy {
       if (!this.videoCheckInterval && this.isWaiting) {
         this.startVideoPolling();
       }
-    }
-    
-  }
-
-  ngOnDestroy(): void {
-    if (this.videoCheckInterval) {
-      clearInterval(this.videoCheckInterval);
-    }
-    if (this.statusCheckSubscription) {
-      this.statusCheckSubscription.unsubscribe();
     }
   }
 }

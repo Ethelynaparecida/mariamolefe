@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { cpfValidator } from '../validators/cpf.validator'; 
 import { nomeSobrenomeValidator } from '../validators/name.validator';
 import { CommonModule } from '@angular/common'; 
+import { ApiService } from '../service/api.service';
 import { LoginService } from '../service/login.service';
 
 @Component({
@@ -23,6 +24,7 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private router: Router,
+    private apiService: ApiService,
     private loginService: LoginService
   ) {
     this.loginForm = this.fb.group({
@@ -32,13 +34,12 @@ export class LoginComponent implements OnInit {
         ]
       ],
       email: ['', [Validators.required, Validators.email]],
-      cpf: ['', [
-          Validators.required, 
-          Validators.minLength(11),
-          Validators.maxLength(11), 
-          cpfValidator
-        ]
-      ]
+      telefone: ['', [
+              Validators.required, 
+              Validators.minLength(10), 
+              Validators.maxLength(15)  
+            ]
+          ]
     });
   }
 
@@ -48,16 +49,28 @@ export class LoginComponent implements OnInit {
   onSubmit(): void {
     if (this.loginForm.valid) {
       const userData = this.loginForm.value;
-      console.log('Dados do formulário (Login):', userData);
-      this.loginService.salvarLogin(userData);
-      console.log('Formulário válido, navegando para /buscar');
-      this.router.navigate(['/buscar']); 
+      
+      this.apiService.fazerLogin(userData).subscribe({
+        
+        next: (response) => {
+          console.log('Backend confirmou o login:', response);
+          this.loginService.salvarLogin(userData); 
+          this.router.navigate(['/buscar']);
+        },
+        error: (err) => {
+          console.error('ERRO ao contactar o backend para o login:', err);
+          this.loginService.salvarLogin(userData); 
+          this.router.navigate(['/buscar']);
+        }
+      });
+      
     } else {
-      console.log('Formulário inválido. Por favor, verifique os campos.');
+      console.log('Formulário inválido, a marcar campos.');
+      this.loginForm.markAllAsTouched();
     }
   }
 
   get nome() { return this.loginForm.get('nome'); }
   get email() { return this.loginForm.get('email'); }
-  get cpf() { return this.loginForm.get('cpf'); }
+  get telefone() { return this.loginForm.get('telefone'); }
 }

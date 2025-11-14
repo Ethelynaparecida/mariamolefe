@@ -33,18 +33,15 @@
     </div>
 
     <div class="form-group">
-      <label for="cpf">CPF</label>
-      <input id="cpf" type="text" formControlName="cpf" placeholder="Apenas números">
+      <label for="telefone">Telefone Celular</label>
+      <input id="telefone" type="tel" formControlName="telefone" placeholder="(xx) xxxxx-xxxx">
       
-      <div *ngIf="cpf?.invalid && (cpf?.dirty || cpf?.touched)" class="error-message">
-        <span *ngIf="cpf?.errors?.['required']">
-          O CPF é obrigatório.
+      <div *ngIf="telefone?.invalid && (telefone?.dirty || telefone?.touched)" class="error-message">
+        <span *ngIf="telefone?.errors?.['required']">
+          O telefone é obrigatório.
         </span>
-        <span *ngIf="cpf?.errors?.['minlength'] || cpf?.errors?.['maxlength']">
-          O CPF deve conter exatamente 11 dígitos.
-        </span>
-        <span *ngIf="cpf?.errors?.['cpfInvalido'] && !cpf?.errors?.['required']">
-          Este número de CPF não é válido.
+        <span *ngIf="telefone?.errors?.['minlength'] || telefone?.errors?.['maxlength']">
+          Insira um número de telefone válido.
         </span>
       </div>
     </div>

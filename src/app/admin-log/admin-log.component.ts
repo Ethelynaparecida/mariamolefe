@@ -41,7 +41,6 @@ export class AdminLogComponent implements OnInit {
     });
   }
 
-  // Função auxiliar para criar a URL do YouTube
   getYouTubeUrl(videoId: string): string {
     return `https://www.youtube.com/watch?v=${videoId}`;
   }

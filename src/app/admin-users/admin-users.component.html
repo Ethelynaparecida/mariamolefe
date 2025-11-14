@@ -1,0 +1,39 @@
+<div class="log-container">
+  
+  <div class="header">
+    <h2>Utilizadores Registados (Telefones)</h2>
+    <a routerLink="/admin/dashboard" class="btn-voltar">
+      &larr; Voltar ao Dashboard
+    </a>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">A carregar...</div>
+  <div *ngIf="error" class="error">{{ error }}</div>
+
+  <div *ngIf="!isLoading && !error" class="log-table-wrapper">
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Telefone Celular</th>
+          <th>Email</th>
+          <th>Data de Cadastro</th>
+          <th>Último Login</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="usersList.length === 0">
+          <td colspan="5">Nenhum utilizador registado.</td>
+        </tr>
+        
+        <tr *ngFor="let user of usersList">
+          <td>{{ user.nome }}</td>
+          <td>{{ user.telefone }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ formatarData(user.dataCadastro) }}</td>
+          <td>{{ formatarData(user.ultimoLogin) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

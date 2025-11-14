@@ -1,8 +1,5 @@
 import { AbstractControl, ValidationErrors } from '@angular/forms';
 
-/**
- * Validador customizado para CPF.
- */
 export function cpfValidator(control: AbstractControl): ValidationErrors | null {
   
  

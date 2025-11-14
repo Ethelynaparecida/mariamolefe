@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core'; 
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs'; 
 
 @Injectable({
   providedIn: 'root'
@@ -9,6 +10,9 @@ export class LoginService {
   private readonly USER_STORAGE_KEY = 'karaoke_user';
   private readonly POSITION_STORAGE_KEY = 'karaoke_position';
 
+private logoutSubject = new Subject<void>();
+  public logout$ = this.logoutSubject.asObservable();
+
   constructor(
     private router: Router,
    
@@ -16,7 +20,7 @@ export class LoginService {
     
   }
 
-  salvarLogin(userData: { nome: string; email: string; cpf: string }): void {
+  salvarLogin(userData: { nome: string; email: string; telefone: string }): void {
     
       try {
         localStorage.setItem(this.USER_STORAGE_KEY, JSON.stringify(userData));
@@ -26,7 +30,7 @@ export class LoginService {
     
   }
 
-  getUsuarioLogado(): { nome: string; email: string; cpf: string } | null {
+  getUsuarioLogado(): { nome: string; email: string; telefone: string} | null {
  
       try {
         const userData = localStorage.getItem(this.USER_STORAGE_KEY);
@@ -45,15 +49,14 @@ export class LoginService {
   }
 
   fazerLogout(): void {
-  
-      try {
-        localStorage.removeItem(this.USER_STORAGE_KEY);
-        localStorage.removeItem(this.POSITION_STORAGE_KEY);
-        this.router.navigate(['/login']);
-      } catch (e) {
-        console.error("Erro ao fazer logout:", e);
-      }
-    
+    try {
+      this.logoutSubject.next(); 
+      localStorage.removeItem(this.USER_STORAGE_KEY);
+      localStorage.removeItem(this.POSITION_STORAGE_KEY);
+      this.router.navigate(['/login']);
+    } catch (e) {
+      console.error("Erro ao fazer logout:", e);
+    }
   }
 
   salvarPosicao(posicao: number | string | null): void {
@@ -70,8 +73,6 @@ export class LoginService {
   
       return localStorage.getItem(this.POSITION_STORAGE_KEY);
     }
-
-  
 
   estaNaFila(): boolean {
     const pos = this.getPosicao();

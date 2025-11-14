@@ -10,8 +10,14 @@ import { authGuard } from './service/auth.guard';
 import { loginGuard } from './service/login.guard';
 import { playerGuard } from './service/player.guard';
 import { AdminLogComponent } from './admin-log/admin-log.component';
+import { AdminUsersComponent } from './admin-users/admin-users.component';
 
 export const routes: Routes = [
+  {
+    path: 'admin/users',
+    component: AdminUsersComponent,
+    canActivate: [playerGuard],
+  },
   {
     path: 'login',
     component: LoginComponent,

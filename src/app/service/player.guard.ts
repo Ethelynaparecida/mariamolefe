@@ -7,7 +7,6 @@ export const playerGuard: CanActivateFn = (route, state) => {
   
   const router = inject(Router);
 
-  // Verifica se a chave de permissão existe no sessionStorage
 const isPlayerAuthenticated = localStorage.getItem(PLAYER_AUTH_KEY) === 'true'; 
   if (isPlayerAuthenticated) {
     return true;

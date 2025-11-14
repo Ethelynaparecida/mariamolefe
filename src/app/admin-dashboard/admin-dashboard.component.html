@@ -1,69 +1,131 @@
 <div class="admin-container">
-  <h2>Painel de Controle do Karaokê</h2>
-  <div *ngIf="feedbackMessage" class="feedback">
-    {{ feedbackMessage }}
-  </div>
 
-  <a href="/player" target="_blank" class="btn-link btn-tv">
-    📺 Abrir Ecrã da TV (Player)
-  </a>
+  <h2>DPainel de Controle Maria Mole</h2>
+
   <div class="panels-wrapper">
 
     <div class="panel controls-panel">
-      <h3>Controlos</h3>
-
+      <h3>Controles</h3>
       <div class="button-group">
         <button *ngIf="!isPaused" class="btn-pause" (click)="pause()">
-          Pausar Música
+          Pausar Player
         </button>
         <button *ngIf="isPaused" class="btn-play" (click)="play()">
-          Continuar Música
+          Continuar Player
         </button>
-
+      
+        <button class="btn-restart" (click)="restart()" [disabled]="!currentSong">
+          Recomeçar Música
+        </button>
+      
         <button class="btn-skip" (click)="skip()" [disabled]="!currentSong">
           Pular Música Atual
         </button>
-         <button class="btn-restart" (click)="restart()" [disabled]="!currentSong">
-          Recomeçar Música
-        </button>
       </div>
-     
-
       <div class="links-section">
-        <a routerLink="/admin/log" class="btn-link">Ver Histórico de Músicas</a>
+        <a href="/player" target="_blank" class="btn-link btn-tv">
+          📺 Abrir tela do video(Player)
+        </a>
+        <a routerLink="/admin/log" class="btn-link btn-log">
+          📋 Ver Histórico de Músicas (Últimas 4h)
+        </a>
+        <a routerLink="/admin/users" class="btn-link btn-users">
+          👤 Ver Lista de Usuarios
+        </a>
       </div>
     </div>
 
     <div class="panel queue-panel">
       <h3>Fila de Músicas</h3>
-
       <div class="queue-section">
-        <h4>Tocando Agora</h4>
+        <h4>A Tocar Agora</h4>
         <div *ngIf="currentSong; else filaVazia" class="queue-item current">
           <span class="q-title" [innerHTML]="currentSong.titulo"></span>
-          <span class="q-user"> | Por {{ currentSong.nomeUsuario }}</span>
+          <span class="q-user"> por {{ currentSong.nomeUsuario }}</span>
         </div>
       </div>
-
       <div class="queue-section">
         <h4>Próximas na Fila</h4>
         <div *ngIf="upcomingSongs.length > 0; else proximasVazia">
           <ol class="queue-list">
             <li *ngFor="let song of upcomingSongs" class="queue-item">
-              <span class="q-title" [innerHTML]="song.titulo"> </span>
-              <span class="q-user"> | Por {{ song.nomeUsuario }}</span>
+              <span class="q-title" [innerHTML]="song.titulo"></span>
+              <span class="q-user"> por {{ song.nomeUsuario }}</span>
             </li>
           </ol>
         </div>
       </div>
-
       <ng-template #filaVazia>
         <p class="empty-text">A fila de músicas está vazia.</p>
       </ng-template>
       <ng-template #proximasVazia>
         <p class="empty-text">Nenhuma música na fila de espera.</p>
       </ng-template>
+    </div>
+
+    <div class="panel search-panel">
+      <h3>Adicionar Música (Admin)</h3>
+      <p>Adicione uma música para um convidado.</p>
+
+    <form [formGroup]="adminSearchForm">
+        
+  <div class="form-group">
+    <label for="nomeConvidado">Nome do Convidado:</label>
+    <input id="nomeConvidado" type="text" formControlName="nome" placeholder="Ex: João Silva">
+    
+    <div *ngIf="adminSearchForm.get('nome')?.invalid && adminSearchForm.get('nome')?.touched" class="error-message">
+      É preciso preencher o nome antes de continuar.
+    </div>
+  </div>
+
+  <div class="form-group search-bar" (click)="onDisabledClick()">
+    <input type="text" formControlName="query" placeholder="Buscar música..."
+           [disabled]="adminSearchForm.get('nome')?.invalid ?? true">
+
+    <button (click)="onAdminSearch($event)" 
+            [disabled]="adminSearchForm.get('nome')?.invalid || adminSearchForm.get('query')?.value === '' || isSearching">
+      <span *ngIf="!isSearching">Buscar</span>
+      <span *ngIf="isSearching">...</span>
+    </button>
+    </div>
+
+  <div class="divider-text">ou</div>
+
+  <div class="form-group search-bar" (click)="onDisabledClick()">
+    <input type="text" formControlName="videoUrl" placeholder="Cole a URL do YouTube..."
+           [disabled]="adminSearchForm.get('nome')?.invalid ?? true">
+
+    <button (click)="onAdminAddByUrl($event)"
+            [disabled]="adminSearchForm.get('nome')?.invalid || adminSearchForm.get('videoUrl')?.invalid || isAddingByUrl">
+      <span *ngIf="!isAddingByUrl">Adicionar</span>
+      <span *ngIf="isAddingByUrl">...</span>
+    </button>
+    </div>
+  
+  </form>
+
+      <div class="results-container">
+      </div>
 
     </div>
+  </div>
+  <div class="quota-section">
+        <h4>Uso da Cota (Diário)</h4>
+        <div *ngIf="!quotaUsage" class="loading-quota">A carregar...</div>
+        <div *ngIf="quotaUsage">
+          <p>
+            Unidades Usadas: 
+            <strong>{{ quotaUsage.unidadesUsadas }} / {{ quotaUsage.limiteDiario }}</strong>
+          </p>
+          <progress [value]="quotaUsage.unidadesUsadas" [max]="quotaUsage.limiteDiario"></progress>
+          
+          <p class="buscas-restantes">
+            Buscas Restantes: <strong>~{{ quotaUsage.buscasRestantesEstimadas }}</strong>
+          </p>
+        </div>
+      </div>
+
+  <div *ngIf="feedbackMessage" class="feedback">
+    {{ feedbackMessage }}
   </div>
 </div>

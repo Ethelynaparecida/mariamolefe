@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common'; 
+import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { Subscription, interval, startWith, switchMap } from 'rxjs';
+import { Subscription, interval, startWith, switchMap, takeUntil } from 'rxjs';
 
 import { LoginService } from '../service/login.service';
 import { ApiService } from '../service/api.service';
@@ -9,20 +9,19 @@ import { ApiService } from '../service/api.service';
 @Component({
   selector: 'app-position',
   standalone: true,
-  imports: [CommonModule], 
+  imports: [CommonModule],
   templateUrl: './position.component.html',
-  styleUrls: ['./position.component.less']
+  styleUrls: ['./position.component.less'],
 })
 export class PositionComponent implements OnInit, OnDestroy {
-
   usuarioNome: string | null = null;
-  private usuarioCpf: string | null = null;
+  private usuarioTelefone: string | null = null;
 
   posicao: number = -2; // -2 = Carregando, -1 = Tocou, 0 = Tocando, >0 = Na Fila
   isLoading: boolean = true;
-  
+
   private pollingSubscription: Subscription | null = null;
-  private readonly POLLING_INTERVAL_MS = 8000; 
+  private readonly POLLING_INTERVAL_MS = 10000;
 
   constructor(
     private loginService: LoginService,
@@ -39,24 +38,25 @@ export class PositionComponent implements OnInit, OnDestroy {
     }
 
     this.usuarioNome = usuario.nome;
-    this.usuarioCpf = usuario.cpf;
+    this.usuarioTelefone = usuario.telefone;
 
     this.startPolling();
   }
 
   startPolling(): void {
-    if (this.pollingSubscription || !this.usuarioCpf) {
-      return; 
+    if (this.pollingSubscription || !this.usuarioTelefone) {
+      return;
     }
 
     this.pollingSubscription = interval(this.POLLING_INTERVAL_MS)
       .pipe(
-        startWith(0), 
-        switchMap(() => this.apiService.verPosicao(this.usuarioCpf!))
+        startWith(0),
+        switchMap(() => this.apiService.verPosicao(this.usuarioTelefone!)),
+        takeUntil(this.loginService.logout$)
       )
       .subscribe({
         next: (response) => {
-          this.posicao = response.position; 
+          this.posicao = response.position;
           this.isLoading = false;
 
           this.loginService.salvarPosicao(this.posicao);
@@ -66,9 +66,9 @@ export class PositionComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error("Erro ao verificar posição:", err);
+          console.error('Erro ao verificar posição:', err);
           this.isLoading = false;
-        }
+        },
       });
   }
 
@@ -80,17 +80,19 @@ export class PositionComponent implements OnInit, OnDestroy {
   }
 
   adicionarOutraMusica(): void {
-    this.loginService.salvarPosicao(null); 
-    
+    this.loginService.salvarPosicao(null);
+
     this.router.navigate(['/buscar']);
   }
 
   fazerLogout(): void {
-    this.stopPolling(); 
-    this.loginService.fazerLogout(); 
+    this.stopPolling();
+    this.loginService.fazerLogout();
   }
 
   ngOnDestroy(): void {
-    this.stopPolling();
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+    }
   }
 }

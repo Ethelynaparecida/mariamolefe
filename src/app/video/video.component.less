@@ -97,3 +97,27 @@
     }
   }
 }
+.divider-text {
+  text-align: center;
+  font-weight: bold;
+  color: #888;
+  margin: 15px 0;
+  text-transform: uppercase;
+  
+  &:before, &:after {
+    content: '';
+    display: inline-block;
+    width: 40%;
+    height: 1px;
+    background-color: #ddd;
+    vertical-align: middle;
+    margin: 0 10px;
+  }
+}
+.error-message {
+  color: #d9534f;
+  font-size: 0.9em;
+  margin-top: -10px;
+  margin-bottom: 10px;
+  text-align: left;
+}

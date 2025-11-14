@@ -12,8 +12,22 @@
     </div>
   </form>
 
-  <div class="results-container">
+  <div class="divider-text">ou</div>
 
+  <form [formGroup]="urlForm" (ngSubmit)="onAddByUrl()">
+    <div class="form-group">
+      <input type="text" formControlName="videoUrl" placeholder="Cole a URL do vídeo do YouTube aqui...">
+      <button type="submit" [disabled]="urlForm.invalid || isAddingByUrl">
+        <span *ngIf="!isAddingByUrl">Adicionar</span>
+        <span *ngIf="isAddingByUrl">...</span>
+      </button>
+    </div>
+    <div *ngIf="urlForm.get('videoUrl')?.invalid && urlForm.get('videoUrl')?.touched" class="error-message">
+      Ou se preferir insira uma URL válida do YouTube.
+    </div>
+  </form>
+  <div class="results-container">
+    
     <div *ngIf="isLoading" class="loading-spinner">
       <p>Procurando...</p>
     </div>
@@ -23,24 +37,22 @@
     </div>
 
     <ul class="video-list" *ngIf="!isLoading && searchResults.length > 0">
+      
+      <li *ngFor="let video of searchResults" class="video-item">
+        
+        <img [src]="video.snippet.thumbnails.default.url" [alt]="video.snippet.title" class="video-thumbnail">
+        
+        <div class="video-info">
+          <h4 class="video-title" [innerHTML]="video.snippet.title"></h4>
+          <p class="video-channel" [innerHTML]="video.snippet.channelTitle"></p>
+        </div>
+        
+        <button (click)="adicionarMusica(video)" class="add-button">
+          Adicionar
+        </button>
 
-  <li *ngFor="let video of searchResults" class="video-item">
-    
-    <img [src]="video.snippet.thumbnails.default.url" 
-         [alt]="video.snippet.title" 
-         class="video-thumbnail">
-
-    <div class="video-info">
-      <h4 class="video-title" [innerHTML]="video.snippet.title"></h4>
-      <p class="video-channel" [innerHTML]="video.snippet.channelTitle"></p>
-    </div>
-
-    <button (click)="adicionarMusica(video)" class="add-button">
-      Adicionar
-    </button>
-
-  </li>
-</ul>
+      </li>
+    </ul>
 
   </div>
 

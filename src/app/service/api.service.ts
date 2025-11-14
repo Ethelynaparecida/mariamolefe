@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class ApiService {
 
-  private readonly BASE_URL =  /*'http://localhost:8080/api'; */  'https://mariamole.onrender.com/api';
+  private readonly BASE_URL = /*'http://localhost:8080/api'; */  'https://mariamole.onrender.com/api';
 
   constructor(private http: HttpClient) { }
 
@@ -18,19 +18,19 @@ export class ApiService {
   buscarVideos(termo: string): Observable<any> {
     return this.http.get(`${this.BASE_URL}/search`, { params: { q: termo } });
   }
-  
-  adicionarNaFila(videoId: string, titulo: string, nome: string, cpf: string): Observable<any> {
+
+  adicionarNaFila(videoId: string, titulo: string, nome: string, telefone: string): Observable<any> {
     const body = {
       videoId: videoId,
       titulo: titulo,
       nome: nome,
-      cpf: cpf
+      telefone: telefone
     };
     return this.http.post(`${this.BASE_URL}/queue/add`, body);
   }
 
-  verPosicao(apelido: string): Observable<any> {
-     return this.http.get(`${this.BASE_URL}/queue/position/${apelido}`);
+  verPosicao(telefoneUsuario: string): Observable<any> {
+    return this.http.get(`${this.BASE_URL}/queue/position/${telefoneUsuario}`); 
   }
 
   getProximaMusica(): Observable<any> {
@@ -58,18 +58,35 @@ export class ApiService {
     return this.http.get(`${this.BASE_URL}/player/status`);
   }
 
-  /*** Pular a música atual.*/
   skipSong(): Observable<any> {
     return this.http.post(`${this.BASE_URL}/admin/player/skip`, {});
   }
 
-  /*** Buscapróximas músicas na fila.*/
+
   getQueueView(): Observable<any[]> {
     return this.http.get<any[]>(`${this.BASE_URL}/admin/queue/view`);
   }
 
   getLogDoDia(): Observable<any[]> {
-    // Este endpoint chama o GET /api/admin/log/dia
     return this.http.get<any[]>(`${this.BASE_URL}/admin/log/dia`);
+  }
+  fazerLogin(dadosUsuario: { nome: string; email: string; telefone: string }): Observable<any> { 
+    return this.http.post(`${this.BASE_URL}/login`, dadosUsuario);
+  }
+
+  getUsuariosRegistados(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.BASE_URL}/admin/users`);
+  }
+
+  adminAddSong(nome: string, videoId: string, titulo: string): Observable<any> {
+    const body = {
+      nome: nome,
+      videoId: videoId,
+      titulo: titulo
+    };
+    return this.http.post(`${this.BASE_URL}/admin/queue/add`, body);
+  }
+  getQuotaUsage(): Observable<any> {
+    return this.http.get(`${this.BASE_URL}/admin/quota`);
   }
 }
