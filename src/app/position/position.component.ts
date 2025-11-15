@@ -37,6 +37,12 @@ export class PositionComponent implements OnInit, OnDestroy {
       this.router.navigate(['/login']);
       return;
     }
+    console.log(" posicaoooooo dois " + this.posicao);
+    if(this.posicao === 0){
+       this.loginService.salvarPosicao(null);
+       this.router.navigate(['/buscar']);
+       return;
+    }
     this.usuarioNome = usuario.nome;
     this.usuarioTelefone = usuario.telefone;
     this.startPolling();
@@ -47,6 +53,7 @@ export class PositionComponent implements OnInit, OnDestroy {
   }
 
   startPolling(): void {
+    console.log(" comecou startpolling " );
     if (this.pollingSubscription || !this.usuarioTelefone) { return; }
     this.pollingSubscription = interval(this.POLLING_INTERVAL_MS)
       .pipe(
