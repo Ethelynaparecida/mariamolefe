@@ -62,7 +62,6 @@ export class ApiService {
     return this.http.post(`${this.BASE_URL}/admin/player/skip`, {});
   }
 
-
   getQueueView(): Observable<any[]> {
     return this.http.get<any[]>(`${this.BASE_URL}/admin/queue/view`);
   }
