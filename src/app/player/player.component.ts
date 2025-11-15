@@ -53,15 +53,12 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
 
   loadYouTubeApi(): void {
-    if (!(window as any).YT) {
+   if (!(window as any).YT) {
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
       document.body.appendChild(tag);
-
       (window as any).onYouTubeIframeAPIReady = () => {
-        this.ngZone.run(() => {
-          this.createPlayer();
-        });
+        this.ngZone.run(() => this.createPlayer());
       };
     } else {
       this.createPlayer();

@@ -37,12 +37,13 @@ export class PositionComponent implements OnInit, OnDestroy {
       this.router.navigate(['/login']);
       return;
     }
-    console.log(" posicaoooooo dois " + this.posicao);
-    if(this.posicao === 0){
-       this.loginService.salvarPosicao(null);
-       this.router.navigate(['/buscar']);
-       return;
-    }
+    const pos = this.loginService.getPosicao();
+    console.log(" posicaoooooo dois " + pos);
+   /* if(pos === null || pos === undefined || pos === '0'){
+      this.loginService.fazerLogout();
+      return
+    }*/
+
     this.usuarioNome = usuario.nome;
     this.usuarioTelefone = usuario.telefone;
     this.startPolling();
@@ -64,7 +65,7 @@ export class PositionComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           this.posicao = response.position; 
-console.log(" posicaoooooo " + this.posicao);
+
           
           this.isLoading = false;
           this.errorCounter = 0;

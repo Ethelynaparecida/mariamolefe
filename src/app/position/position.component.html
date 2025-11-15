@@ -3,46 +3,42 @@
   <div *ngIf="isLoading" class="status-card loading">
     <div class="spinner"></div>
     <p>A verificar a sua posição na fila...</p>
-  </div>
-
-  <div >
-    <button class*="btn-logout" (click)="fazerLogout()">
-    Sair (Logout)
-  </button>
-    
-    <h3>Olá, {{ usuarioNome }}!</h3>
-
-    <div [ngSwitch]="posicao" class="status-card">
-
-      <div *ngSwitchDefault class="status-fila">
-        <p>Você está na fila!</p>
-        <div class="posicao-numero">{{ posicao }}</div>
-        <p class="legenda">é a sua posição</p>
-      </div>
-
-      <div *ngSwitchCase="1" class="status-fila proximo">
-        <p>Prepare-se!</p>
-        <div class="posicao-numero">VOCÊ É O PRÓXIMO!</div>
-      </div>
-      
-      <div *ngSwitchCase="0" class="status-fila tocando">
-        <p>Chegou a sua vez!</p>
-        <div class="posicao-numero">A SUA MÚSICA ESTÁ A TOCAR!</div>
-      </div>
-
-      <div *ngSwitchCase="-1" class="status-fila tocado">
-        <p>A sua música já tocou!</p>
-        <div class="posicao-numero">🎤</div>
-        <p>Obrigado por participar.</p>
-        
-        <button class="btn-adicionar" (click)="adicionarOutraMusica()">
-          Adicionar Outra Música
-        </button>
-      </div>
-      
-    </div>
-
     <button class="btn-logout" (click)="fazerLogout()">Sair (Logout)</button>
   </div>
 
+
+
+  <h3>Olá, {{ usuarioNome }}!</h3>
+
+  <div [ngSwitch]="posicao" class="status-card">
+
+    <div *ngSwitchDefault class="status-fila">
+      <p>Você está na fila!</p>
+      <div class="posicao-numero">{{ posicao }}</div>
+      <p class="legenda">é a sua posição</p>
+    </div>
+
+    <div *ngSwitchCase="1" class="status-fila proximo">
+      <p>Prepare-se!</p>
+      <div class="posicao-numero">VOCÊ É O PRÓXIMO!</div>
+    </div>
+
+    <div *ngSwitchCase="0" class="status-fila tocando">
+      <p>Chegou a sua vez!</p>
+      <div class="posicao-numero">A SUA MÚSICA ESTÁ A TOCAR!</div>
+    </div>
+
+    <div *ngSwitchCase="-1" class="status-fila tocado">
+      <p>A sua música já tocou!</p>
+      <div class="posicao-numero">🎤</div>
+      <p>Obrigado por participar.</p>
+
+      <button class="btn-adicionar" (click)="adicionarOutraMusica()">
+        Adicionar Outra Música
+      </button>
+    </div>
+
+  </div>
+
+  <button class="btn-logout" (click)="fazerLogout()">Sair (Logout)</button>
 </div>
