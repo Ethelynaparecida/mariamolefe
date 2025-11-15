@@ -13,11 +13,20 @@ export class LoginService {
 private logoutSubject = new Subject<void>();
   public logout$ = this.logoutSubject.asObservable();
 
+
   constructor(
     private router: Router,
    
   ) {
     
+  }
+
+  salvarPosicao(posicao: number | string | null): void {
+    if (posicao === null || posicao === undefined || posicao === '0') {
+      localStorage.removeItem(this.POSITION_STORAGE_KEY);
+    } else {
+      localStorage.setItem(this.POSITION_STORAGE_KEY, String(posicao));
+    }
   }
 
   salvarLogin(userData: { nome: string; email: string; telefone: string }): void {
@@ -59,15 +68,6 @@ private logoutSubject = new Subject<void>();
     }
   }
 
-  salvarPosicao(posicao: number | string | null): void {
-   
-      if (posicao === null || posicao === undefined) {
-        localStorage.removeItem(this.POSITION_STORAGE_KEY);
-      } else {
-        localStorage.setItem(this.POSITION_STORAGE_KEY, String(posicao));
-      }
-    
-  }
 
   getPosicao(): string | null {
   
