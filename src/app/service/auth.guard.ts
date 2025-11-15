@@ -12,15 +12,28 @@ export const authGuard: CanActivateFn = (route, state) => {
     router.navigate(['/login']);
     return false;
   }
+const temMusicaNaFila = loginService.estaNaFila(); 
+  const estaAcederFila = state.url.includes('/fila');
+  const estaAcederBuscar = state.url.includes('/buscar');
 
-  if (state.url.includes('/fila')) {
-    if (loginService.estaNaFila()) {
-      return true;
+  if (temMusicaNaFila) {
+if (estaAcederFila) {
+      return true; 
     } else {
-      console.warn("AuthGuard: Utilizador logado mas sem música na fila. A redirecionar de /fila para /buscar.");
+      
+      console.warn("AuthGuard: Utilizador com música ativa foi bloqueado de aceder a " + state.url + ". A redirecionar para /fila.");
+      router.navigate(['/fila']);
+      return false; 
+    }
+
+  } else {
+    if (estaAcederBuscar) {
+      return true; 
+    } else {
+
+ console.warn("AuthGuard: Utilizador sem música foi bloqueado de aceder a " + state.url + ". A redirecionar para /buscar.");
       router.navigate(['/buscar']);
-      return false;
+      return false; 
     }
   }
-  return true;
 };
