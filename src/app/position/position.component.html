@@ -6,6 +6,9 @@
   </div>
 
   <div *ngIf="!isLoading">
+    <button class*="btn-logout" (click)="fazerLogout()">
+    Sair (Logout)
+  </button>
     
     <h3>Olá, {{ usuarioNome }}!</h3>
 
