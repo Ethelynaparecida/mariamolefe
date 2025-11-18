@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class ApiService {
 
-  private readonly BASE_URL = /*'http://localhost:8080/api'; */  'https://mariamole.onrender.com/api';
+  private readonly BASE_URL = /*'http://localhost:8080/api'; */ 'https://mariamole.onrender.com/api';
 
   constructor(private http: HttpClient) { }
 
@@ -85,7 +85,16 @@ export class ApiService {
     };
     return this.http.post(`${this.BASE_URL}/admin/queue/add`, body);
   }
+
   getQuotaUsage(): Observable<any> {
     return this.http.get(`${this.BASE_URL}/admin/quota`);
+  }
+
+  lockQueue(): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/admin/queue/lock`, {});
+  }
+
+  unlockQueue(): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/admin/queue/unlock`, {});
   }
 }

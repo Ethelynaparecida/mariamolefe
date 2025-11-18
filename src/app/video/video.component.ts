@@ -10,7 +10,6 @@ import { CommonModule } from '@angular/common';
 import { ApiService } from '../service/api.service';
 import { LoginService } from '../service/login.service';
 
-
 @Component({
   selector: 'app-video',
   standalone: true,
@@ -26,10 +25,11 @@ export class VideoComponent implements OnInit {
   urlForm: FormGroup;
   isAddingByUrl: boolean = false;
 
-
-
-  private usuarioLogado: { nome: string; email: string; telefone: string } | null =
-    null;
+  private usuarioLogado: {
+    nome: string;
+    email: string;
+    telefone: string;
+  } | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -41,11 +41,15 @@ export class VideoComponent implements OnInit {
       query: ['', Validators.required],
     });
     this.urlForm = this.fb.group({
-      videoUrl: ['', [
-        Validators.required,
-        Validators.pattern(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/)
-      ]
-      ]
+      videoUrl: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(
+            /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/
+          ),
+        ],
+      ],
     });
   }
 
@@ -60,10 +64,12 @@ export class VideoComponent implements OnInit {
   }
 
   private parseVideoId(url: string): string | null {
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const regex =
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const match = url.match(regex);
     return match ? match[1] : null;
   }
+
   onSearch(): void {
     if (this.searchForm.invalid) {
       return;
@@ -84,17 +90,16 @@ export class VideoComponent implements OnInit {
       console.log('Termo de busca modificado:', searchTerm);
     }
 
-
     this.apiService.buscarVideos(searchTerm).subscribe({
       next: (results) => {
         this.searchResults = results.items || [];
-        this.isLoading = false; 
+        this.isLoading = false;
         console.log('Resultados da busca:', this.searchResults);
       },
       error: (err) => {
         console.error('Erro ao buscar vídeos:', err);
-        this.isLoading = false; 
-      }
+        this.isLoading = false;
+      },
     });
   }
 
@@ -111,23 +116,31 @@ export class VideoComponent implements OnInit {
 
     console.log(`Utilizador ${nomeUsuario} a adicionar: ${videoTitle}`);
 
-    this.apiService.adicionarNaFila(videoId, videoTitle, nomeUsuario, telefoneUsuario).subscribe({
-      next: (response) => {
-        const posicao = response.position || 'na fila';
+    this.apiService
+      .adicionarNaFila(videoId, videoTitle, nomeUsuario, telefoneUsuario)
+      .subscribe({
+        next: (response) => {
+          const posicao = response.position || 'na fila';
 
-        this.loginService.salvarPosicao(posicao);
-        this.router.navigate(['/fila']);
-      },
-      error: (err) => {
-        console.error('Erro ao adicionar na fila:', err);
-        if (err.status === 409) {
-          alert('Erro: Você já tem uma música na fila! Aguarde ela tocar.');
+          this.loginService.salvarPosicao(posicao);
           this.router.navigate(['/fila']);
-        } else {
-          alert('Ocorreu um erro ao adicionar a música.');
-        }
-      },
-    });
+        },
+        error: (err) => {
+          console.error('Erro ao adicionar na fila:', err);
+          if (err.status === 409) {
+            // Erro 409: Já tem música na fila
+            alert('Erro: Você já tem uma música na fila! Aguarde ela tocar.');
+            this.router.navigate(['/fila']);
+          } else if (err.status === 423) {
+            // Erro 423: Fila bloqueada
+            alert(
+              'Desculpe, a fila de músicas está fechada pelo admin neste momento. Tente novamente mais tarde.'
+            );
+          } else {
+            alert('Ocorreu um erro ao adicionar a música.');
+          }
+        },
+      });
   }
 
   onAddByUrl(): void {
@@ -140,15 +153,20 @@ export class VideoComponent implements OnInit {
     const videoId = this.parseVideoId(url);
 
     if (!videoId) {
-      alert("URL do YouTube inválida. Verifique o link e tente novamente.");
+      alert('URL do YouTube inválida. Verifique o link e tente novamente.');
       this.isAddingByUrl = false;
       return;
     }
 
+    const titulo = 'Video por url';
 
-    const titulo = "Video por url";
-
-    this.apiService.adicionarNaFila(videoId, titulo, this.usuarioLogado!.nome, this.usuarioLogado!.telefone)
+    this.apiService
+      .adicionarNaFila(
+        videoId,
+        titulo,
+        this.usuarioLogado!.nome,
+        this.usuarioLogado!.telefone
+      )
       .subscribe({
         next: (response) => {
           const posicao = response.position || 'na fila';
@@ -160,11 +178,15 @@ export class VideoComponent implements OnInit {
           if (err.status === 409) {
             alert('Erro: Você já tem uma música na fila! Aguarde ela tocar.');
             this.router.navigate(['/fila']);
+          } else if (err.status === 423) {
+            alert(
+              'Desculpe, a fila de músicas está fechada, e não aceita novos pedidos. Agradecemos a preferência!'
+            );
           } else {
             alert('Ocorreu um erro ao adicionar a música.');
           }
           this.isAddingByUrl = false;
-        }
+        },
       });
   }
 }

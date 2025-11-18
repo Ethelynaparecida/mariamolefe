@@ -25,6 +25,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   public queueView: any[] = [];
   public currentSong: any = null;
   public upcomingSongs: any[] = [];
+  public isQueueLocked: boolean = false;
   private adminPoll: Subscription | null = null;
   private readonly POLLING_INTERVAL_MS = 5000; 
 
@@ -78,6 +79,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       )
       .subscribe(response => {
         this.isPaused = response.status.isPaused;
+        this.isQueueLocked = response.status.isQueueLocked;
         this.queueView = response.queue;
         this.currentSong = this.queueView.length > 0 ? this.queueView[0] : null;
         this.upcomingSongs = this.queueView.length > 1 ? this.queueView.slice(1) : [];
@@ -243,5 +245,19 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   mostrarFeedback(msg: string): void {
     this.feedbackMessage = msg;
     setTimeout(() => this.feedbackMessage = '', 2000);
+  }
+
+  lockQueue(): void {
+    this.apiService.lockQueue().subscribe(() => {
+      this.mostrarFeedback('Fila BLOQUEADA');
+      this.isQueueLocked = true; 
+    });
+  }
+
+  unlockQueue(): void {
+    this.apiService.unlockQueue().subscribe(() => {
+      this.mostrarFeedback('Fila DESBLOQUEADA');
+      this.isQueueLocked = false; 
+    });
   }
 }

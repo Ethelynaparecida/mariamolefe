@@ -1,25 +1,34 @@
 <div class="admin-container">
 
-  <h2>DPainel de Controle Maria Mole</h2>
+  <h2>Painel de Controle Maria Mole</h2>
 
   <div class="panels-wrapper">
 
+
     <div class="panel controls-panel">
+      <h3>Fila de Músicas (Total: {{ queueView.length }})</h3>
       <h3>Controles</h3>
+      
       <div class="button-group">
+
         <button *ngIf="!isPaused" class="btn-pause" (click)="pause()">
           Pausar Player
         </button>
         <button *ngIf="isPaused" class="btn-play" (click)="play()">
           Continuar Player
         </button>
-      
+
         <button class="btn-restart" (click)="restart()" [disabled]="!currentSong">
           Recomeçar Música
         </button>
-      
+
         <button class="btn-skip" (click)="skip()" [disabled]="!currentSong">
           Pular Música Atual
+        </button>
+
+         <button *ngIf="!isQueueLocked" class="btn-lock" (click)="lockQueue()">Bloquear Fila 
+        </button>
+        <button *ngIf="isQueueLocked" class="btn-unlock" (click)="unlockQueue()">Desbloquear Fila 
         </button>
       </div>
       <div class="links-section">
@@ -67,42 +76,43 @@
       <h3>Adicionar Música (Admin)</h3>
       <p>Adicione uma música para um convidado.</p>
 
-    <form [formGroup]="adminSearchForm">
-        
-  <div class="form-group">
-    <label for="nomeConvidado">Nome do Convidado:</label>
-    <input id="nomeConvidado" type="text" formControlName="nome" placeholder="Ex: João Silva">
-    
-    <div *ngIf="adminSearchForm.get('nome')?.invalid && adminSearchForm.get('nome')?.touched" class="error-message">
-      É preciso preencher o nome antes de continuar.
-    </div>
-  </div>
+      <form [formGroup]="adminSearchForm">
 
-  <div class="form-group search-bar" (click)="onDisabledClick()">
-    <input type="text" formControlName="query" placeholder="Buscar música..."
-           [disabled]="adminSearchForm.get('nome')?.invalid ?? true">
+        <div class="form-group">
+          <label for="nomeConvidado">Nome do Convidado:</label>
+          <input id="nomeConvidado" type="text" formControlName="nome" placeholder="Ex: João Silva">
 
-    <button (click)="onAdminSearch($event)" 
+          <div *ngIf="adminSearchForm.get('nome')?.invalid && adminSearchForm.get('nome')?.touched"
+            class="error-message">
+            É preciso preencher o nome antes de continuar.
+          </div>
+        </div>
+
+        <div class="form-group search-bar" (click)="onDisabledClick()">
+          <input type="text" formControlName="query" placeholder="Buscar música..."
+            [disabled]="adminSearchForm.get('nome')?.invalid ?? true">
+
+          <button (click)="onAdminSearch($event)"
             [disabled]="adminSearchForm.get('nome')?.invalid || adminSearchForm.get('query')?.value === '' || isSearching">
-      <span *ngIf="!isSearching">Buscar</span>
-      <span *ngIf="isSearching">...</span>
-    </button>
-    </div>
+            <span *ngIf="!isSearching">Buscar</span>
+            <span *ngIf="isSearching">...</span>
+          </button>
+        </div>
 
-  <div class="divider-text">ou</div>
+        <div class="divider-text">ou</div>
 
-  <div class="form-group search-bar" (click)="onDisabledClick()">
-    <input type="text" formControlName="videoUrl" placeholder="Cole a URL do YouTube..."
-           [disabled]="adminSearchForm.get('nome')?.invalid ?? true">
+        <div class="form-group search-bar" (click)="onDisabledClick()">
+          <input type="text" formControlName="videoUrl" placeholder="Cole a URL do YouTube..."
+            [disabled]="adminSearchForm.get('nome')?.invalid ?? true">
 
-    <button (click)="onAdminAddByUrl($event)"
+          <button (click)="onAdminAddByUrl($event)"
             [disabled]="adminSearchForm.get('nome')?.invalid || adminSearchForm.get('videoUrl')?.invalid || isAddingByUrl">
-      <span *ngIf="!isAddingByUrl">Adicionar</span>
-      <span *ngIf="isAddingByUrl">...</span>
-    </button>
-    </div>
-  
-  </form>
+            <span *ngIf="!isAddingByUrl">Adicionar</span>
+            <span *ngIf="isAddingByUrl">...</span>
+          </button>
+        </div>
+
+      </form>
 
       <div class="results-container">
       </div>
@@ -110,20 +120,20 @@
     </div>
   </div>
   <div class="quota-section">
-        <h4>Uso da Cota (Diário)</h4>
-        <div *ngIf="!quotaUsage" class="loading-quota">A carregar...</div>
-        <div *ngIf="quotaUsage">
-          <p>
-            Unidades Usadas: 
-            <strong>{{ quotaUsage.unidadesUsadas }} / {{ quotaUsage.limiteDiario }}</strong>
-          </p>
-          <progress [value]="quotaUsage.unidadesUsadas" [max]="quotaUsage.limiteDiario"></progress>
-          
-          <p class="buscas-restantes">
-            Buscas Restantes: <strong>~{{ quotaUsage.buscasRestantesEstimadas }}</strong>
-          </p>
-        </div>
-      </div>
+    <h4>Uso da Cota (Diário)</h4>
+    <div *ngIf="!quotaUsage" class="loading-quota">A carregar...</div>
+    <div *ngIf="quotaUsage">
+      <p>
+        Unidades Usadas:
+        <strong>{{ quotaUsage.unidadesUsadas }} / {{ quotaUsage.limiteDiario }}</strong>
+      </p>
+      <progress [value]="quotaUsage.unidadesUsadas" [max]="quotaUsage.limiteDiario"></progress>
+
+      <p class="buscas-restantes">
+        Buscas Restantes: <strong>~{{ quotaUsage.buscasRestantesEstimadas }}</strong>
+      </p>
+    </div>
+  </div>
 
   <div *ngIf="feedbackMessage" class="feedback">
     {{ feedbackMessage }}

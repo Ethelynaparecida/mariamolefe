@@ -163,9 +163,10 @@
       flex-grow: 1;
       border-radius: 4px 0 0 4px;
     }
+
     .button-wrapper {
-    display: flex; 
-  }
+      display: flex;
+    }
 
     button {
       padding: 8px 12px;
@@ -253,4 +254,23 @@
   border-radius: 4px;
   cursor: pointer;
   margin-left: 10px;
+}
+
+.btn-lock {
+  background-color: #84121e; // Vermelho (Perigo)
+  color: white;
+
+  &:hover {
+    background-color: #4f0a11;
+    color: #ffff;
+  }
+}
+
+.btn-unlock {
+  background-color: #28a745; // Verde (Sucesso)
+  color: white;
+
+  &:hover {
+    background-color: #218838;
+  }
 }
