@@ -30,7 +30,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   } else {
    
     if (estaAcederBuscar) {
-      return true; // OK! Permite o acesso a /buscar
+      return true; // ermite o acesso a /buscar
     } else {
       // ERRO! Está logado, sem música, mas a tentar ir para /fila.
       console.warn("AuthGuard: Utilizador sem música foi bloqueado de aceder a " + state.url + ". A redirecionar para /buscar.");

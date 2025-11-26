@@ -88,8 +88,7 @@ export class LoginService {
     if (userJson) {
       try {
         const user = JSON.parse(userJson);
-        // Assumindo que o seu objeto de usuário tem um campo 'id'
-        return user.id;
+                return user.id;
       } catch (e) {
         return null;
       }

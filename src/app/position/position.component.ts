@@ -1,4 +1,3 @@
-// src/app/position/position.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
@@ -78,7 +77,6 @@ export class PositionComponent implements OnInit, OnDestroy {
           this.isLoading = false;
           this.errorCounter++;
           
-          // A LÓGICA DE AUTO-LOGOUT
           if (this.errorCounter >= this.MAX_ERRORS) {
             console.warn(`[Auto-Logout] Falhou ${this.MAX_ERRORS} vezes. A forçar o logout.`);
             this.stopPolling();
