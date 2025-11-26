@@ -27,7 +27,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   public upcomingSongs: any[] = [];
   public isQueueLocked: boolean = false;
   private adminPoll: Subscription | null = null;
-  private readonly POLLING_INTERVAL_MS = 5000; 
+  private readonly POLLING_INTERVAL_MS = 3000; 
 
   // --- Variáveis do Formulário de Admin ---
   public adminSearchForm: FormGroup;
@@ -88,18 +88,29 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   pause(): void {
-    this.apiService.pausePlayer().subscribe(() => {
-      this.mostrarFeedback('Player Pausado');
-      this.isPaused = true; 
+    this.apiService.pausePlayer().subscribe({
+        next: (response) => {
+            console.log("Comando de Pausa enviado com sucesso.", response);  
+            this.isPaused = true; 
+        },
+        error: (error) => {
+            console.error("Erro ao enviar comando de Pausa.", error);
+            
+        }
     });
-  }
+}
 
   play(): void {
-    this.apiService.playPlayer().subscribe(() => {
-      this.mostrarFeedback('Player a Tocar');
-      this.isPaused = false; 
+    this.apiService.playPlayer().subscribe({
+        next: (response) => {
+            console.log("Comando de Play enviado com sucesso.", response);
+            this.isPaused = false; 
+        },
+        error: (error) => {
+            console.error("Erro ao enviar comando de Play.", error);
+        }
     });
-  }
+}
 
   skip(): void {
     if (confirm('Tem a certeza que quer pular a música atual?')) {
@@ -179,7 +190,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     
     const nome = this.adminSearchForm.get('nome')?.value;
     const url = this.adminSearchForm.get('videoUrl')?.value;
-    const videoId = this.parseVideoId(url);
+    const videoId = this.parseAndValidateVideoId(url);;
 
     if (!videoId) {
       this.mostrarFeedback("URL do YouTube inválida.");
@@ -259,5 +270,29 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.mostrarFeedback('Fila DESBLOQUEADA');
       this.isQueueLocked = false; 
     });
+  }
+
+   private parseAndValidateVideoId(url: string): string | null {
+    // 1. Tenta extrair o ID usando uma Regex abrangente:
+    const regex =
+      /(?:youtube\.com\/(?:live\/|v\/|embed\/|watch\?(?:.*&)?v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(regex);
+
+    let videoId = match ? match[1] : null;
+
+    // 2. Se a regex falhar, tenta extrair de URLs sem domínio (se o usuário colou só o caminho)
+    if (!videoId) {
+      const shortMatch = url.match(/([^"&?\/\s]{11})$/);
+      if (shortMatch && shortMatch[1].length === 11) {
+        videoId = shortMatch[1];
+      }
+    }
+
+    // 3. Validação final: o ID TEM que ter 11 caracteres.
+    if (videoId && videoId.length === 11) {
+      return videoId;
+    }
+
+    return null;
   }
 }

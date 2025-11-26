@@ -20,7 +20,7 @@ export class PositionComponent implements OnInit, OnDestroy {
   posicao: number = -2; // -2 = Carregando
   isLoading: boolean = true;
   private pollingSubscription: Subscription | null = null;
-  private readonly POLLING_INTERVAL_MS = 5000; 
+  private readonly POLLING_INTERVAL_MS = 3000; 
 
   private errorCounter: number = 0;
   private readonly MAX_ERRORS = 3; // Desiste após 3 falhas seguidas
@@ -65,12 +65,13 @@ export class PositionComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (response) => {
           this.posicao = response.position; 
-
+          
           
           this.isLoading = false;
           this.errorCounter = 0;
           this.loginService.salvarPosicao(String(this.posicao));
           if (this.posicao === -1) { this.stopPolling(); }
+          
         },
         error: (err) => {
           console.error("Erro ao verificar posição:", err);

@@ -6,6 +6,12 @@ export const loginGuard: CanActivateFn = (route, state) => {
 
   const loginService = inject(LoginService);
   const router = inject(Router);
+  const temMusicaNaFila = loginService.estaNaFila(); 
+  const estaAcederFila = state.url.includes('/fila');
+  const estaAcederBuscar = state.url.includes('/buscar');
+
+  console.log("**aloginguard temMusicaNaFila ",temMusicaNaFila," estaAcederFila ",estaAcederFila," estaAcederBuscar ",estaAcederBuscar);
+
 
   if (!loginService.estaLogado()) {
     return true;
