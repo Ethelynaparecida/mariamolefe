@@ -81,6 +81,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
         mute: 1, // Toca em mute para contornar restrições de autoplay
         iv_load_policy: 3, // Remove as "anotações" do vídeo
         modestbranding: 1, // Tenta remover o logo do YouTube
+        origin: 'currentOrigin'
       },
       events: {
         onReady: (event: any) => this.onPlayerReady(event),
@@ -251,7 +252,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
       }
     }
   }
-  
+
   loadVideoAndPlay(videoId: string, startSeconds: number = 0): void {
     if (this.player) {
       this.player.loadVideoById({

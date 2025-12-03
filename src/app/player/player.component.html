@@ -13,8 +13,8 @@
   <div class="overlay now-playing" *ngIf="videoAtual">
   <div class="now-playing-content">
     <p>Tocando:</p>
-    <h4 [innerHTML]="videoAtual.titulo || 'Carregando Título...'"></h4>
-    <h4>Pedido por: {{ videoAtual.nomeUsuario || 'Alguém' }}</h4>
+    <h2 [innerHTML]="videoAtual.titulo || 'Carregando Título...'"></h2>
+    <h2>Pedido por: {{ videoAtual.nomeUsuario || 'Alguém' }}</h2>
   </div>
 </div>
 
