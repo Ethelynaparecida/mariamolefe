@@ -7,8 +7,8 @@ import { Observable } from 'rxjs';
 })
 export class ApiService {
 
-  //private readonly BASE_URL ='https://mariamole.onrender.com/api';
-  private readonly BASE_URL = 'http://localhost:8080/api'; 
+  private readonly BASE_URL ='https://mariamole.onrender.com/api';
+  //private readonly BASE_URL = 'http://localhost:8080/api'; 
   constructor(private http: HttpClient) { }
 
   login(apelido: string): Observable<any> {
