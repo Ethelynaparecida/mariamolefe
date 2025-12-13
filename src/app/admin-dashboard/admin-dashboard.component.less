@@ -1,5 +1,5 @@
 .admin-container {
-  max-width: 800px;
+  max-width: 940px;
   margin: 30px auto;
   padding: 20px;
   font-family: Arial, sans-serif;
@@ -83,6 +83,16 @@
       background-color: #0056b3;
     }
   }
+  .btn-warning {
+     background-color: #ccce44;
+    color: rgb(0, 0, 0);
+    margin: 5px 10px;
+  }
+  .btn-outline-danger{
+    background-color: #8e0c0c;
+    color: rgb(255, 255, 255);
+    margin: 5px 10px;
+  }
 
   .links-section {
     margin-top: 30px;
@@ -91,6 +101,8 @@
     display: flex;
     flex-direction: column; // Botões um em cima do outro
     gap: 15px; // Espaço entre os botões
+    width: 100%;
+
 
     .btn-link {
       display: inline-block;
@@ -132,6 +144,11 @@
 .search-panel {
   flex: 1.5; // Um pouco maior
   min-width: 300px;
+
+  h6{
+    margin-block-start: 1.33em;
+    margin-block-end: 1em;
+  }
 
   .form-group {
     margin-bottom: 15px;
@@ -175,6 +192,7 @@
       color: white;
       cursor: pointer;
       border-radius: 0 4px 4px 0;
+      min-width: 90px;
 
       &:disabled {
         background-color: #eda3a3;
@@ -231,6 +249,8 @@
   flex-wrap: wrap; // Permite quebrar em telemóveis
   gap: 20px;
   justify-content: center;
+    width: 100%;
+
 }
 
 .panel {
@@ -273,4 +293,18 @@
   &:hover {
     background-color: #218838;
   }
+}
+
+.ui-bloqueada {
+  opacity: 0.5;          
+  pointer-events: none;  
+  filter: grayscale(1);  
+  user-select: none;     
+  cursor: not-allowed;
+}
+
+.alert-danger-error{
+  background-color: #f2b7b7;
+  margin: 10px;
+  padding: 10px;
 }

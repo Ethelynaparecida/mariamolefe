@@ -37,6 +37,8 @@ export class PlayerComponent implements OnInit, OnDestroy {
   private lastSkipHandledTime: number = 0;
   public isPaused: boolean = false;
 
+  public currentVideoUrl: string = '';
+
   constructor(
     private apiService: ApiService,
     private loginService: LoginService,
@@ -86,8 +88,58 @@ export class PlayerComponent implements OnInit, OnDestroy {
       events: {
         onReady: (event: any) => this.onPlayerReady(event),
         onStateChange: (event: any) => this.onPlayerStateChange(event),
+        'onError': (event: any) => this.onPlayerError(event)
       },
     });
+  }
+
+  onPlayerError(event: any): void {
+    this.ngZone.run(() => {
+        console.error("Player Error Code:", event.data);
+        
+        let msg = "Erro desconhecido";
+        if (event.data === 101 || event.data === 150) msg = "Vídeo restrito (não pode ser exibido).";
+        else if (event.data === 100) msg = "Vídeo não encontrado ou privado.";
+
+        if (this.videoAtual && this.videoAtual.videoId) {
+            
+            const urlToSend = this.currentVideoUrl || `https://www.youtube.com/watch?v=${this.videoAtual.videoId}`;
+            console.log("Objeto videoAtual completo:", this.videoAtual);
+            const videoAny = this.videoAtual as any;
+            const nomeCorreto = videoAny.nome || videoAny.nomeUsuario || videoAny.usuario || "Desconhecido";
+
+            const payload = {
+                videoId: this.videoAtual.videoId,
+                url: urlToSend,
+                message: msg,
+                userName: nomeCorreto
+            };
+
+            this.stopPolling(); 
+
+            this.apiService.notifyVideoError(payload).subscribe({
+                next: () => {
+                   console.warn("Erro enviado ao Admin. Aguardando resolução.");
+                   this.isWaiting = true; 
+                },
+                error: (e) => console.error("Falha ao enviar erro:", e)
+            });
+        }
+    });
+  }
+
+  stopPolling(): void {
+
+    if (this.videoCheckInterval) {
+        clearInterval(this.videoCheckInterval);
+        this.videoCheckInterval = null;
+    }
+
+    if (this.statusCheckSubscription) {
+        this.statusCheckSubscription.unsubscribe();
+        this.statusCheckSubscription = null;
+    }
+    console.log("Polling do Player interrompido devido a erro.");
   }
 
   onPlayerReady(event: any): void {
@@ -247,8 +299,10 @@ export class PlayerComponent implements OnInit, OnDestroy {
       this.player.playVideo();
       this.isLocallyPaused = false;
 
-      if (!this.videoCheckInterval && this.isWaiting) {
-        this.startVideoPolling();
+      if (this.isWaiting) {
+            this.startVideoPolling(); 
+            this.getNextVideo();      
+            console.log("PLAY detectado durante espera. Forçando busca do próximo vídeo.");
       }
     }
   }

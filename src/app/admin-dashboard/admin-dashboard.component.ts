@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../service/api.service';
@@ -32,16 +32,24 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   // --- Variáveis do Formulário de Admin ---
   public adminSearchForm: FormGroup;
   public adminSearchResults: any[] = [];
+
   public isSearching: boolean = false;
+  public hasSearched: boolean = false;
   public isAddingByUrl: boolean = false;
 
   public quotaUsage: any = null;
+
+  public errorVideoUrl: string | null = null;
+    public errorVideoId: string | null = null;
+    public errorMessage: string | null = null;
+    public errorUserName: string | null = null;
 
 
   constructor(
     private apiService: ApiService,
     private fb: FormBuilder,
-    private loginService: LoginService
+    private loginService: LoginService,
+    private cdr: ChangeDetectorRef
   ) {
     this.adminSearchForm = this.fb.group({
       nome: ['', Validators.required], 
@@ -68,7 +76,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       .pipe(
         startWith(0), 
         switchMap(() => 
-         
           forkJoin({
             status: this.apiService.getPlayerStatus(),
             queue: this.apiService.getQueueView(),
@@ -84,8 +91,34 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.currentSong = this.queueView.length > 0 ? this.queueView[0] : null;
         this.upcomingSongs = this.queueView.length > 1 ? this.queueView.slice(1) : [];
         this.quotaUsage = response.quota;
+        const st = response.status as any;
+        if (st.errorVideoId) {
+            this.errorVideoId = st.errorVideoId;
+            this.errorVideoUrl = st.errorVideoUrl;
+            this.errorMessage = st.errorMessage;
+            this.errorUserName = st.errorUserName;
+        } else {
+            this.errorVideoId = null;
+            this.errorVideoUrl = null;
+            this.errorMessage = null;
+            this.errorUserName = null;
+        }
+
+        this.cdr.detectChanges();
       });
+      
   }
+
+  skipOnError(): void {
+    this.apiService.clearVideoError().subscribe(() => {
+        console.log("Erro limpo pelo admin.");
+        this.errorVideoId = null; // Some o alerta imediatamente
+    });
+  }
+  openVideoInNewTab(): void {
+    if (this.errorVideoUrl) {
+        window.open(this.errorVideoUrl, '_blank');
+    }}
 
   pause(): void {
     this.apiService.pausePlayer().subscribe({
@@ -156,6 +189,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     if (!queryValue) return;
 
     this.isSearching = true;
+    this.hasSearched = false;
     this.adminSearchResults = [];
 
     let searchTerm: string = queryValue;
@@ -168,10 +202,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       next: (results) => {
         this.adminSearchResults = results.items || []; 
         this.isSearching = false;
+        this.hasSearched = true;
       },
       error: (err) => {
         console.error('Erro ao buscar vídeos (Admin):', err);
         this.isSearching = false;
+        this.hasSearched = true;
       }
     });
   }
@@ -229,6 +265,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         next: () => {
             this.mostrarFeedback(`'${titulo}' adicionado para ${nome}!`);
             this.adminSearchResults = []; 
+            this.hasSearched = false;
             this.adminSearchForm.get('query')?.reset(); 
             this.forceRefresh();
         },
@@ -238,6 +275,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         }
     });
   }
+
+
 
   private parseVideoId(url: string): string | null {
     const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;

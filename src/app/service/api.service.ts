@@ -101,4 +101,18 @@ export class ApiService {
    
     return this.http.post(`${this.BASE_URL}/queue/remove-by-user/${userId}`, {});
   }
+
+  notifyVideoError(payload: { videoId: string, url: string, message: string }): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/queue/error/notify`, payload);
+  }
+
+  getErrorStatus(): Observable<{
+    errorUserName: string , errorVideoId: string, errorVideoUrl: string, errorMessage: string 
+}> {
+    return this.http.get<any>(`${this.BASE_URL}/queue/error/status`);
+  }
+
+  clearVideoError(): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/queue/error/clear`, {});
+  }
 }
