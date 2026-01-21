@@ -39,6 +39,9 @@ export class PlayerComponent implements OnInit, OnDestroy {
 
   public currentVideoUrl: string = '';
 
+  public showSongInfo: boolean = true; 
+  private infoTimeout: any; 
+
   constructor(
     private apiService: ApiService,
     private loginService: LoginService,
@@ -192,6 +195,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     this.getNextVideo();
     this.videoCheckInterval = setInterval(() => {
       this.getNextVideo();
+      this.resetSongInfoTimer();
     }, this.POLLING_INTERVAL_MS);
   }
 
@@ -313,7 +317,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
         videoId: videoId,
         startSeconds: startSeconds,
       });
-
+      this.resetSongInfoTimer();
       // Após carregar, força o estado baseado no que o servidor diz
       if (this.isPaused) {
         this.player.pauseVideo();
@@ -325,5 +329,16 @@ export class PlayerComponent implements OnInit, OnDestroy {
         this.player.playVideo();
       }
     }
+  }
+
+  resetSongInfoTimer(): void {
+    this.showSongInfo = true;
+
+    if (this.infoTimeout) {
+      clearTimeout(this.infoTimeout);
+    }
+    this.infoTimeout = setTimeout(() => {
+      this.showSongInfo = false; 
+    }, 90000); 
   }
 }
