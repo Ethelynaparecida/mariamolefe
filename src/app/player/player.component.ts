@@ -213,6 +213,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
             this.isWaiting = false;
             this.player.loadVideoById(response.videoId);
             this.player.unMute();
+            this.resetSongInfoTimer();
 
             if (!this.isLocallyPaused) {
               this.player.playVideo();
