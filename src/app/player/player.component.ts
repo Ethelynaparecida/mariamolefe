@@ -303,6 +303,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
       console.log('A TOCAR (via admin)');
       this.player.playVideo();
       this.isLocallyPaused = false;
+      this.resetSongInfoTimer();
 
       if (this.isWaiting) {
             this.startVideoPolling(); 
