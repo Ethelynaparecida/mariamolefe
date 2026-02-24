@@ -23,6 +23,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   // --- Variáveis de Polling (Fila e Pausa) ---
   public isPaused: boolean = false;
   public queueView: any[] = [];
+  public queueSize: number = 0;
   public currentSong: any = null;
   public upcomingSongs: any[] = [];
   public isQueueLocked: boolean = false;
@@ -79,6 +80,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
           forkJoin({
             status: this.apiService.getPlayerStatus(),
             queue: this.apiService.getQueueView(),
+            queueSize: this.apiService.getQueueSize(),
             quota: this.apiService.getQuotaUsage()
           })
         ),
@@ -88,6 +90,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.isPaused = response.status.isPaused;
         this.isQueueLocked = response.status.isQueueLocked;
         this.queueView = response.queue;
+        this.queueSize = response.queueSize;
         this.currentSong = this.queueView.length > 0 ? this.queueView[0] : null;
         this.upcomingSongs = this.queueView.length > 1 ? this.queueView.slice(1) : [];
         this.quotaUsage = response.quota;

@@ -66,6 +66,10 @@ export class ApiService {
     return this.http.get<any[]>(`${this.BASE_URL}/admin/queue/view`);
   }
 
+  getQueueSize(): Observable<any>{
+    return this.http.get(`${this.BASE_URL}/admin/queue/count`);
+  }
+
   getLogDoDia(): Observable<any[]> {
     return this.http.get<any[]>(`${this.BASE_URL}/admin/log/dia`);
   }
