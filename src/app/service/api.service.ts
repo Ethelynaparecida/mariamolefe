@@ -15,6 +15,14 @@ export class ApiService {
     return this.http.post(`${this.BASE_URL}/login`, { apelido: apelido });
   }
 
+  solicitarToken(dadosBasicos: { nome: string; email: string; telefone: string }): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/login/solicitar-token`, dadosBasicos);
+  }
+
+  validarToken(dadosValidacao: { email: string; token: string }): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/login/validar-token`, dadosValidacao);
+  }
+
   buscarVideos(termo: string): Observable<any> {
     return this.http.get(`${this.BASE_URL}/search`, { params: { q: termo } });
   }

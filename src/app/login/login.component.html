@@ -1,52 +1,89 @@
 <div class="login-container">
   <h2>Entrar no Karaokê</h2>
-  <p>Por favor, identifique-se para adicionar músicas à fila.</p>
+  
+  <p *ngIf="!etapaConfirmacao">Por favor, identifique-se para adicionar músicas à fila.</p>
+  <p *ngIf="etapaConfirmacao">Enviamos um código para <strong>{{ email?.value }}</strong>. Digite-o abaixo.</p>
 
   <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <fieldset [disabled]="estaCarregando" class="form-fieldset">
 
-    <div class="form-group">
-      <label for="nome">Nome Completo</label>
-      <input id="nome" type="text" formControlName="nome" placeholder="Seu nome e sobrenome">
-      
-      <div *ngIf="nome?.invalid && (nome?.dirty || nome?.touched)" class="error-message">
-        <span *ngIf="nome?.errors?.['required']">
-          O nome é obrigatório.
-        </span>
-        <span *ngIf="nome?.errors?.['nomeIncompleto'] && !nome?.errors?.['required']">
-          Por favor, insira seu nome e sobrenome.
-        </span>
+    <div *ngIf="!etapaConfirmacao">
+      <div class="form-group">
+        <label for="nome">Nome Completo</label>
+        <input id="nome" type="text" formControlName="nome" placeholder="Seu nome e sobrenome">
+        <div *ngIf="nome?.invalid && (nome?.dirty || nome?.touched)" class="error-message">
+          <span *ngIf="nome?.errors?.['required']">O nome é obrigatório.</span>
+          <span *ngIf="nome?.errors?.['nomeIncompleto'] && !nome?.errors?.['required']">
+            Por favor, insira seu nome e sobrenome.
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          id="email" 
+          type="email" 
+          formControlName="email" 
+          placeholder="seu.email@exemplo.com"
+          (focus)="mostrarAvisoEmail = true"
+          (blur)="mostrarAvisoEmail = false"
+        >
+        <div *ngIf="mostrarAvisoEmail" class="info-message">
+          Enviaremos um código de 4 dígitos para este e-mail.
+        </div>
+        <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
+          <span *ngIf="email?.errors?.['required']">O email é obrigatório.</span>
+          <span *ngIf="email?.errors?.['email']">Por favor, insira um email válido.</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="telefone">Telefone Celular</label>
+        <input id="telefone" type="tel" formControlName="telefone" placeholder="(xx) xxxxx-xxxx">
+        <div *ngIf="telefone?.invalid && (telefone?.dirty || telefone?.touched)" class="error-message">
+          <span *ngIf="telefone?.errors?.['required']">O telefone é obrigatório.</span>
+          <span *ngIf="telefone?.errors?.['pattern']">Use apenas números ou (XX) 9XXXX-XXXX.</span>
+        </div>
       </div>
     </div>
 
-    <div class="form-group">
-      <label for="email">Email</label>
-      <input id="email" type="email" formControlName="email" placeholder="seu.email@exemplo.com">
-      
-      <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
-        <span *ngIf="email?.errors?.['required']">
-          O email é obrigatório.
-        </span>
-        <span *ngIf="email?.errors?.['email']">
-          Por favor, insira um email válido.
-        </span>
+    <div *ngIf="etapaConfirmacao">
+      <div class="form-group">
+        <label for="token">Código de Verificação</label>
+        <input id="token" type="text" formControlName="token" placeholder="Digite os 4 dígitos" maxlength="4">
+        
+        <div *ngIf="token?.invalid && (token?.dirty || token?.touched)" class="error-message">
+          <span *ngIf="token?.errors?.['required']">O código é obrigatório.</span>
+          <span *ngIf="token?.errors?.['minlength']">O código deve ter 4 dígitos.</span>
+        </div>
+      </div>
+
+      <div class="spam-notice">
+        Não encontrou o e-mail? Dê uma olhadinha na sua caixa de <strong>Spam</strong> ou <strong>Lixo Eletrônico</strong>.
+      </div>
+
+      <div class="back-link-container">
+        <a (click)="voltarEtapa()">E-mail incorreto? Clique aqui para corrigir.</a>
       </div>
     </div>
 
-    <div class="form-group">
-      <label for="telefone">Telefone Celular</label>
-      <input id="telefone" type="tel" formControlName="telefone" placeholder="(xx) xxxxx-xxxx">
-      
-      <div *ngIf="telefone?.invalid && (telefone?.dirty || telefone?.touched)" class="error-message">
-        <span *ngIf="telefone?.errors?.['required']">
-          O telefone é obrigatório.
-        </span>
-        <span *ngIf="telefone?.errors?.['minlength'] || telefone?.errors?.['maxlength']">
-          Insira um número de telefone válido.
-        </span>
-      </div>
-    </div>
+    <button type="submit" [disabled]="loginForm.invalid || estaCarregando">
+      {{ !etapaConfirmacao ? 'Continuar' : 'Confirmar e Entrar' }}
+    </button>
 
-    <button type="submit" [disabled]="loginForm.invalid">Entrar</button>
-
+  </fieldset>
   </form>
+</div>
+
+<div *ngIf="estaCarregando" class="loading-overlay">
+  <div class="loader-content">
+    <div class="spinner"></div>
+    <p class="loader-text">
+      {{ !etapaConfirmacao ? 'Estamos a enviar o código para o seu e-mail...' : 'Estamos a validar o seu acesso...' }}
+    </p>
+    <p *ngIf="!etapaConfirmacao" class="render-warning">
+      Isso pode demorar até 1 minuto. Por favor, aguarde.
+    </p>
+  </div>
 </div>
