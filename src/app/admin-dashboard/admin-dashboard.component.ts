@@ -17,10 +17,8 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 })
 export class AdminDashboardComponent implements OnInit, OnDestroy {
 
-  // --- Variáveis de Estado da UI ---
   public feedbackMessage: string = '';
 
-  // --- Variáveis de Polling (Fila e Pausa) ---
   public isPaused: boolean = false;
   public queueView: any[] = [];
   public queueSize: number = 0;
@@ -30,7 +28,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   private adminPoll: Subscription | null = null;
   private readonly POLLING_INTERVAL_MS = 3000; 
 
-  // --- Variáveis do Formulário de Admin ---
   public adminSearchForm: FormGroup;
   public adminSearchResults: any[] = [];
 
@@ -41,10 +38,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   public quotaUsage: any = null;
 
   public errorVideoUrl: string | null = null;
-    public errorVideoId: string | null = null;
-    public errorMessage: string | null = null;
-    public errorUserName: string | null = null;
-
+  public errorVideoId: string | null = null;
+  public errorMessage: string | null = null;
+  public errorUserName: string | null = null;
 
   constructor(
     private apiService: ApiService,
@@ -65,14 +61,12 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-   
     if (this.adminPoll) {
       this.adminPoll.unsubscribe();
     }
   }
 
-
- startAdminPolling(): void {
+  startAdminPolling(): void {
     this.adminPoll = interval(this.POLLING_INTERVAL_MS)
       .pipe(
         startWith(0), 
@@ -94,6 +88,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         this.currentSong = this.queueView.length > 0 ? this.queueView[0] : null;
         this.upcomingSongs = this.queueView.length > 1 ? this.queueView.slice(1) : [];
         this.quotaUsage = response.quota;
+        
         const st = response.status as any;
         if (st.errorVideoId) {
             this.errorVideoId = st.errorVideoId;
@@ -109,19 +104,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
         this.cdr.detectChanges();
       });
-      
   }
-
-  skipOnError(): void {
-    this.apiService.clearVideoError().subscribe(() => {
-        console.log("Erro limpo pelo admin.");
-        this.errorVideoId = null; // Some o alerta imediatamente
-    });
-  }
-  openVideoInNewTab(): void {
-    if (this.errorVideoUrl) {
-        window.open(this.errorVideoUrl, '_blank');
-    }}
 
   pause(): void {
     this.apiService.pausePlayer().subscribe({
@@ -131,10 +114,9 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
             console.error("Erro ao enviar comando de Pausa.", error);
-            
         }
     });
-}
+  }
 
   play(): void {
     this.apiService.playPlayer().subscribe({
@@ -146,7 +128,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
             console.error("Erro ao enviar comando de Play.", error);
         }
     });
-}
+  }
 
   skip(): void {
     if (confirm('Tem a certeza que quer pular a música atual?')) {
@@ -167,7 +149,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       this.apiService.restartPlayer().subscribe({
         next: () => {
           this.mostrarFeedback('Música reiniciada!');
-          
           this.play(); 
         },
         error: (err) => {
@@ -214,7 +195,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       }
     });
   }
-  
 
   onAdminAddByUrl($event: Event): void {
     if (this.adminSearchForm.get('nome')?.valid) {
@@ -229,7 +209,7 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     
     const nome = this.adminSearchForm.get('nome')?.value;
     const url = this.adminSearchForm.get('videoUrl')?.value;
-    const videoId = this.parseAndValidateVideoId(url);;
+    const videoId = this.parseAndValidateVideoId(url);
 
     if (!videoId) {
       this.mostrarFeedback("URL do YouTube inválida.");
@@ -279,8 +259,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-
-
   private parseVideoId(url: string): string | null {
     const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const match = url.match(regex);
@@ -293,7 +271,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
     this.startAdminPolling();
   }
-
 
   mostrarFeedback(msg: string): void {
     this.feedbackMessage = msg;
@@ -314,15 +291,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-   private parseAndValidateVideoId(url: string): string | null {
-    // 1. Tenta extrair o ID usando uma Regex abrangente:
+  private parseAndValidateVideoId(url: string): string | null {
     const regex =
       /(?:youtube\.com\/(?:live\/|v\/|embed\/|watch\?(?:.*&)?v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const match = url.match(regex);
 
     let videoId = match ? match[1] : null;
 
-    // 2. Se a regex falhar, tenta extrair de URLs sem domínio (se o usuário colou só o caminho)
     if (!videoId) {
       const shortMatch = url.match(/([^"&?\/\s]{11})$/);
       if (shortMatch && shortMatch[1].length === 11) {
@@ -330,7 +305,6 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       }
     }
 
-    // 3. Validação final: o ID TEM que ter 11 caracteres.
     if (videoId && videoId.length === 11) {
       return videoId;
     }
