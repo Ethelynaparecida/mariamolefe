@@ -134,6 +134,11 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     if (confirm('Tem a certeza que quer pular a música atual?')) {
       this.apiService.skipSong().subscribe({
         next: () => {
+          this.errorVideoId = null;
+          this.errorVideoUrl = null;
+          this.errorMessage = null;
+          this.errorUserName = null;
+
           this.mostrarFeedback('Música pulada!');
           this.forceRefresh();
         },
