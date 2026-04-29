@@ -118,7 +118,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
                 userName: nomeCorreto
             };
 
-            this.stopPolling(); 
+            this.stopPolling();
 
             this.apiService.notifyVideoError(payload).subscribe({
                 next: () => {
@@ -131,7 +131,7 @@ export class PlayerComponent implements OnInit, OnDestroy {
     });
   }
 
-  stopPolling(): void {
+  /*stopPolling(): void {
 
     if (this.videoCheckInterval) {
         clearInterval(this.videoCheckInterval);
@@ -143,6 +143,15 @@ export class PlayerComponent implements OnInit, OnDestroy {
         this.statusCheckSubscription = null;
     }
     console.log("Polling do Player interrompido devido a erro.");
+  }*/
+
+    stopPolling(): void {
+    if (this.videoCheckInterval) {
+        clearInterval(this.videoCheckInterval);
+        this.videoCheckInterval = null;
+    }
+  
+    console.log("Busca de novas músicas pausada devido a erro. Ouvindo comandos do Admin...");
   }
 
   onPlayerReady(event: any): void {
