@@ -42,29 +42,41 @@
 }
 
 .log-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
+  .sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
 
-  th, td {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-    font-size: 0.9em;
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
   }
 
-  th {
-    background-color: #f4f4f4;
+  .sort-icon {
+    font-size: 0.8em;
+    color: #666;
+    margin-left: 5px;
+  }
+
+  .btn-cancel {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
     font-weight: bold;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #c82333;
+    }
   }
 
-  tbody tr:nth-child(odd) {
-    background-color: #f9f9f9;
-  }
-  
-  td a {
-    color: #007bff;
-    text-decoration: none;
-    &:hover { text-decoration: underline; }
+  .status-played {
+    color: #28a745;
+    font-weight: bold;
+    font-size: 0.9em;
   }
 }

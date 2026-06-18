@@ -3,13 +3,12 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ApiService {
-
-  private readonly BASE_URL ='https://mariamole.onrender.com/api';
-  //private readonly BASE_URL = 'http://localhost:8080/api'; 
-  constructor(private http: HttpClient) { }
+  private readonly BASE_URL = 'https://mariamole.onrender.com/api';
+  //private readonly BASE_URL = 'http://localhost:8080/api';
+  constructor(private http: HttpClient) {}
 
   login(apelido: string): Observable<any> {
     return this.http.post(`${this.BASE_URL}/login`, { apelido: apelido });
@@ -19,18 +18,23 @@ export class ApiService {
     return this.http.get(`${this.BASE_URL}/search`, { params: { q: termo } });
   }
 
-  adicionarNaFila(videoId: string, titulo: string, nome: string, telefone: string): Observable<any> {
+  adicionarNaFila(
+    videoId: string,
+    titulo: string,
+    nome: string,
+    telefone: string,
+  ): Observable<any> {
     const body = {
       videoId: videoId,
       titulo: titulo,
       nome: nome,
-      telefone: telefone
+      telefone: telefone,
     };
     return this.http.post(`${this.BASE_URL}/queue/add`, body);
   }
 
   verPosicao(telefoneUsuario: string): Observable<any> {
-    return this.http.get(`${this.BASE_URL}/queue/position/${telefoneUsuario}`); 
+    return this.http.get(`${this.BASE_URL}/queue/position/${telefoneUsuario}`);
   }
 
   getProximaMusica(): Observable<any> {
@@ -66,14 +70,18 @@ export class ApiService {
     return this.http.get<any[]>(`${this.BASE_URL}/admin/queue/view`);
   }
 
-  getQueueSize(): Observable<any>{
+  getQueueSize(): Observable<any> {
     return this.http.get(`${this.BASE_URL}/admin/queue/count`);
   }
 
   getLogDoDia(): Observable<any[]> {
     return this.http.get<any[]>(`${this.BASE_URL}/admin/log/dia`);
   }
-  fazerLogin(dadosUsuario: { nome: string; email: string; telefone: string }): Observable<any> { 
+  fazerLogin(dadosUsuario: {
+    nome: string;
+    email: string;
+    telefone: string;
+  }): Observable<any> {
     return this.http.post(`${this.BASE_URL}/login`, dadosUsuario);
   }
 
@@ -85,7 +93,7 @@ export class ApiService {
     const body = {
       nome: nome,
       videoId: videoId,
-      titulo: titulo
+      titulo: titulo,
     };
     return this.http.post(`${this.BASE_URL}/admin/queue/add`, body);
   }
@@ -102,21 +110,44 @@ export class ApiService {
     return this.http.post(`${this.BASE_URL}/admin/queue/unlock`, {});
   }
   removeUserSong(userId: string): Observable<any> {
-   
-    return this.http.post(`${this.BASE_URL}/queue/remove-by-user/${userId}`, {});
+    return this.http.post(
+      `${this.BASE_URL}/queue/remove-by-user/${userId}`,
+      {},
+    );
   }
 
-  notifyVideoError(payload: { videoId: string, url: string, message: string }): Observable<any> {
+  notifyVideoError(payload: {
+    videoId: string;
+    url: string;
+    message: string;
+  }): Observable<any> {
     return this.http.post(`${this.BASE_URL}/queue/error/notify`, payload);
   }
 
   getErrorStatus(): Observable<{
-    errorUserName: string , errorVideoId: string, errorVideoUrl: string, errorMessage: string 
-}> {
+    errorUserName: string;
+    errorVideoId: string;
+    errorVideoUrl: string;
+    errorMessage: string;
+  }> {
     return this.http.get<any>(`${this.BASE_URL}/queue/error/status`);
   }
 
   clearVideoError(): Observable<any> {
     return this.http.post(`${this.BASE_URL}/queue/error/clear`, {});
   }
+
+  cancelSong(telefone: string, mensagem: string): Observable<any> {
+    const body = {
+      telefone: telefone,
+      mensagem: mensagem,
+    };
+    return this.http.post(`${this.BASE_URL}/queue/cancel`, body);
+  }
+
+  checkCancelStatus(telefone: string): Observable<any> {
+    return this.http.get(`${this.BASE_URL}/queue/cancel-status/${telefone}`);
+  }
+
+ 
 }

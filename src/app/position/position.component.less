@@ -121,3 +121,48 @@
     color: #d9534f; // Vermelho
   }
 }
+.btn-logout-simple {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 10px 20px;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #0056b3;
+    text-decoration: underline;
+  }
+}
+.btn-logout-prominent {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  font-size: 1.05rem;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+
+  &:hover {
+    background-color: #c82333;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+.logout-actions-wrapper {
+  margin-top: 35px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
