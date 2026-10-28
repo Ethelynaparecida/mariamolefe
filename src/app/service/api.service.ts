@@ -1,22 +1,86 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  private readonly BASE_URL ='https://mariamole.onrender.com/api';
-  //private readonly BASE_URL = 'http://localhost:8080/api'; 
+  private readonly BASE_URL = 'https://mariamole.onrender.com/api';
+  // private readonly BASE_URL = 'http://localhost:8080/api';
   constructor(private http: HttpClient) { }
 
   login(apelido: string): Observable<any> {
     return this.http.post(`${this.BASE_URL}/login`, { apelido: apelido });
   }
 
-  buscarVideos(termo: string): Observable<any> {
-    return this.http.get(`${this.BASE_URL}/search`, { params: { q: termo } });
+  private normalizeResultList(payload: any): any[] {
+    if (Array.isArray(payload)) {
+      return payload;
+    }
+
+    if (!payload || typeof payload !== 'object') {
+      return [];
+    }
+
+    const candidates = [
+      payload.items,
+      payload.results,
+      payload.data,
+      payload.musicas,
+      payload.videos,
+      payload.suggestions
+    ];
+
+    for (const candidate of candidates) {
+      if (Array.isArray(candidate)) {
+        return candidate;
+      }
+    }
+
+    return [];
+  }
+
+  buscarVideos(termo: string): Observable<any[]> {
+    const query = (termo ?? '').trim();
+
+    if (!query) {
+      return of([]);
+    }
+
+    return this.http.get<any[]>(`${this.BASE_URL}/search/local`, { params: { q: query } }).pipe(
+      switchMap((localResults) => {
+        const results = this.normalizeResultList(localResults);
+        if (results.length > 0) {
+          return of(results);
+        }
+
+        return this.http.get<any[]>(`${this.BASE_URL}/search`, { params: { q: query } }).pipe(
+          map((youtubeResults) => this.normalizeResultList(youtubeResults)),
+          catchError(() => of([]))
+        );
+      }),
+      catchError(() => this.http.get<any[]>(`${this.BASE_URL}/search`, { params: { q: query } }).pipe(
+        map((youtubeResults) => this.normalizeResultList(youtubeResults)),
+        catchError(() => of([]))
+      ))
+    );
+  }
+
+  getLocalSearchSuggestions(termo: string): Observable<any[]> {
+    const query = (termo ?? '').trim();
+
+    if (!query) {
+      return of([]);
+    }
+
+    return this.http.get<any[]>(`${this.BASE_URL}/search/local`, { params: { q: query } });
+  }
+
+  getTopSongsLast30Days(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.BASE_URL}/queue/top-10/last-30-days`);
   }
 
   adicionarNaFila(videoId: string, titulo: string, nome: string, telefone: string): Observable<any> {

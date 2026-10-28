@@ -1,14 +1,58 @@
-<div class="search-container">
+<div class="search-container" #searchContainer>
   <h2>Buscar Música</h2>
-  <p>Encontre o karaokê da sua música favorita no YouTube.</p>
+  <p>Escolha abaixo sua música para adicionar à lista de reprodução.</p>
 
   <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
-    <div class="form-group">
-      <input type="text" formControlName="query" placeholder="Nome da música ou artista...">
+    <div class="form-group search-box">
+      <input
+        type="text"
+        formControlName="query"
+        placeholder="Nome da música ou artista..."
+        (input)="onQueryInput()"
+      >
       <button type="submit" [disabled]="searchForm.invalid || isLoading">
         <span *ngIf="!isLoading">Buscar</span>
         <span *ngIf="isLoading">Buscando...</span>
       </button>
+    </div>
+
+    <ul
+      class="suggestion-list"
+      *ngIf="searchForm.get('query')?.value?.trim() && !isLoading && searchResults.length > 0"
+    >
+      <li
+        *ngFor="let suggestion of searchResults; let i = index"
+        class="suggestion-item"
+        [class.active]="i === selectedSuggestionIndex"
+        (click)="onSuggestionSelect(suggestion)"
+      >
+        <div class="suggestion-info">
+          <img
+            class="suggestion-thumb"
+            [src]="getResultThumbnail(suggestion)"
+            [alt]="getResultTitle(suggestion)"
+          >
+
+          <div class="suggestion-meta">
+            <span class="suggestion-title">{{ getResultTitle(suggestion) }}</span>
+            <span class="suggestion-artist">{{ getResultArtist(suggestion) }}</span>
+          </div>
+        </div>
+
+        <div class="suggestion-actions">
+          <button type="button" class="choose-button" (click)="$event.stopPropagation(); onSuggestionSelect(suggestion)">
+            Escolher
+          </button>
+        </div>
+      </li>
+    </ul>
+
+    <div *ngIf="isLoading" class="loading-spinner">
+      <p>Consultando sugestões locais...</p>
+    </div>
+
+    <div *ngIf="!isLoading && searchPerformed && searchForm.get('query')?.value?.trim() && searchResults.length === 0" class="no-results">
+      <p>Essa é nova, ótima escolha.</p>
     </div>
   </form>
 
@@ -26,34 +70,45 @@
       Ou se preferir insira uma URL válida do YouTube.
     </div>
   </form>
-  <div class="results-container">
-    
-    <div *ngIf="isLoading" class="loading-spinner">
-      <p>Procurando...</p>
+
+  <section class="top-songs-panel" aria-label="Top 10 músicas mais pedidas">
+    <h3>Top 10 mais pedidas (30 dias)</h3>
+
+    <div *ngIf="isTopSongsLoading" class="loading-spinner compact">
+      <p>Carregando ranking...</p>
     </div>
 
-    <div *ngIf="!isLoading && searchPerformed && searchResults.length === 0" class="no-results">
-      <p>Nenhum vídeo encontrado para sua busca. Tente outros termos.</p>
-    </div>
-
-    <ul class="video-list" *ngIf="!isLoading && searchResults.length > 0">
-      
-      <li *ngFor="let video of searchResults" class="video-item">
-        
-        <img [src]="video.snippet.thumbnails.default.url" [alt]="video.snippet.title" class="video-thumbnail">
-        
-        <div class="video-info">
-          <h4 class="video-title" [innerHTML]="video.snippet.title"></h4>
-          <p class="video-channel" [innerHTML]="video.snippet.channelTitle"></p>
-        </div>
-        
-        <button (click)="adicionarMusica(video)" class="add-button">
-          Adicionar
-        </button>
-
+    <ul class="top-songs-list" *ngIf="!isTopSongsLoading && topSongs.length > 0">
+      <li *ngFor="let song of topSongs; let i = index" class="top-song-item">
+        <span class="position">#{{ i + 1 }}</span>
+        <span class="title">{{ song.titulo }}</span>
+        <strong class="quantity">{{ song.totalPedidos }}</strong>
       </li>
     </ul>
 
-  </div>
+    <div *ngIf="!isTopSongsLoading && topSongs.length === 0" class="no-results compact">
+      <p>Ainda não há dados de ranking para os últimos 30 dias.</p>
+    </div>
+  </section>
 
+  <div class="duplicate-modal-backdrop" *ngIf="duplicateQueueModal.visible" (click)="cancelarAdicionarMesmoAssim()">
+    <div class="duplicate-modal" (click)="$event.stopPropagation()">
+      <h3>Música já na fila</h3>
+      <p>
+        Já existe esta música aguardando para tocar:<br>
+        <strong>{{ duplicateQueueModal.titulo }}</strong>
+        <span *ngIf="duplicateQueueModal.artista"> - {{ duplicateQueueModal.artista }}</span>
+      </p>
+      <p>Deseja continuar e adicionar mesmo assim?</p>
+
+      <div class="duplicate-modal-actions">
+        <button type="button" class="btn-secondary" (click)="cancelarAdicionarMesmoAssim()">
+          Cancelar
+        </button>
+        <button type="button" class="btn-primary" (click)="confirmarAdicionarMesmoAssim()">
+          Continuar
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

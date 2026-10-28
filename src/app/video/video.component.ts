@@ -1,4 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -18,12 +24,24 @@ import { LoginService } from '../service/login.service';
   styleUrls: ['./video.component.less'],
 })
 export class VideoComponent implements OnInit {
+  @ViewChild('searchContainer') searchContainer?: ElementRef<HTMLDivElement>;
+
   searchForm: FormGroup;
   searchResults: any[] = [];
+  topSongs: any[] = [];
   isLoading: boolean = false;
+  isTopSongsLoading: boolean = false;
   searchPerformed: boolean = false;
+  selectedSuggestionIndex: number = -1;
   urlForm: FormGroup;
   isAddingByUrl: boolean = false;
+  duplicateQueueModal = {
+    visible: false,
+    titulo: '',
+    artista: '',
+    videoId: '',
+  };
+  private queryDebounceTimer: any = null;
 
   private usuarioLogado: {
     nome: string;
@@ -53,24 +71,293 @@ export class VideoComponent implements OnInit {
     });
   }
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.searchContainer) {
+      return;
+    }
+
+    const target = event.target as Node;
+    if (!this.searchContainer.nativeElement.contains(target)) {
+      this.searchResults = [];
+      this.selectedSuggestionIndex = -1;
+    }
+  }
+
   ngOnInit(): void {
     if (!this.loginService.estaLogado()) {
       console.warn('Nenhum utilizador logado, a redirecionar para /login');
       this.router.navigate(['/login']);
-    } else {
-      this.usuarioLogado = this.loginService.getUsuarioLogado();
-      console.log('Utilizador logado:', this.usuarioLogado?.nome);
+      return;
     }
+
+    this.usuarioLogado = this.loginService.getUsuarioLogado();
+    console.log('Utilizador logado:', this.usuarioLogado?.nome);
+    this.carregarTopSongs();
   }
+
+  onQueryInput(): void {
+    const query = (this.searchForm.get('query')?.value ?? '').trim();
+
+    if (!query) {
+      this.searchPerformed = false;
+      this.searchResults = [];
+      this.selectedSuggestionIndex = -1;
+      if (this.queryDebounceTimer) {
+        clearTimeout(this.queryDebounceTimer);
+      }
+      return;
+    }
+
+    if (this.queryDebounceTimer) {
+      clearTimeout(this.queryDebounceTimer);
+    }
+
+    this.searchPerformed = true;
+    this.isLoading = true;
+    this.queryDebounceTimer = setTimeout(() => {
+      this.apiService.getLocalSearchSuggestions(query).subscribe({
+        next: (results) => {
+          this.searchResults = this.normalizeSearchResults(results);
+          this.searchResults = this.searchResults
+            .slice()
+            .sort((a, b) => Number(b.score ?? 0) - Number(a.score ?? 0));
+          this.selectedSuggestionIndex = this.searchResults.length > 0 ? 0 : -1;
+          this.isLoading = false;
+        },
+        error: () => {
+          this.searchResults = [];
+          this.selectedSuggestionIndex = -1;
+          this.isLoading = false;
+        },
+      });
+    }, 300);
+  }
+
+  private normalizeSearchResults(raw: any): any[] {
+    if (Array.isArray(raw)) {
+      return raw;
+    }
+
+    if (!raw || typeof raw !== 'object') {
+      return [];
+    }
+
+    const possibleCollections = [raw.items, raw.results, raw.data, raw.musicas, raw.videos, raw.suggestions];
+    for (const candidate of possibleCollections) {
+      if (Array.isArray(candidate)) {
+        return candidate;
+      }
+    }
+
+    return [];
+  }
+
+  private carregarTopSongs(): void {
+    this.isTopSongsLoading = true;
+
+    this.apiService.getTopSongsLast30Days().subscribe({
+      next: (results) => {
+        this.topSongs = Array.isArray(results) ? results : [];
+        this.topSongs.sort((a, b) => Number(b.totalPedidos ?? 0) - Number(a.totalPedidos ?? 0));
+        this.isTopSongsLoading = false;
+      },
+      error: () => {
+        this.topSongs = [];
+        this.isTopSongsLoading = false;
+      },
+    });
+  }
+
+  getResultTitle(item: any): string {
+    return item?.titulo || item?.title || item?.nome || item?.snippet?.title || 'Sem título';
+  }
+
+  getResultArtist(item: any): string {
+    return item?.artista || item?.artist || item?.autor || item?.channelTitle || item?.snippet?.channelTitle || 'Artista desconhecido';
+  }
+
+  getResultThumbnail(item: any): string {
+    return (
+      item?.thumbnail ||
+      item?.miniatura ||
+      item?.imagem ||
+      item?.thumbnailUrl ||
+      item?.artwork ||
+      item?.snippet?.thumbnails?.default?.url ||
+      item?.snippet?.thumbnails?.medium?.url ||
+      item?.snippet?.thumbnails?.high?.url ||
+      'https://placehold.co/80x80/eeeeee/666666?text=M'
+    );
+  }
+
+  getResultVideoId(item: any): string {
+    return item?.videoId || item?.id?.videoId || item?.youtubeId || item?.id || '';
+  }
+
+  private normalizeText(value: string): string {
+    return (value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private isApproximateDuplicate(titleA: string, titleB: string): boolean {
+    const cleanedA = this.normalizeText(titleA);
+    const cleanedB = this.normalizeText(titleB);
+
+    if (!cleanedA || !cleanedB) {
+      return false;
+    }
+
+    if (cleanedA === cleanedB) {
+      return true;
+    }
+
+    if (cleanedA.includes(cleanedB) || cleanedB.includes(cleanedA)) {
+      return true;
+    }
+
+    const aTokens = new Set(cleanedA.split(' ').filter(Boolean));
+    const bTokens = new Set(cleanedB.split(' ').filter(Boolean));
+
+    if (!aTokens.size || !bTokens.size) {
+      return false;
+    }
+
+    const intersection = [...aTokens].filter((token) => bTokens.has(token)).length;
+    const union = new Set([...aTokens, ...bTokens]).size;
+    const similarity = union ? intersection / union : 0;
+
+    return similarity >= 0.75;
+  }
+
+  private areArtistsSimilar(artistA: string, artistB: string): boolean {
+    const cleanedA = this.normalizeText(artistA);
+    const cleanedB = this.normalizeText(artistB);
+
+    if (!cleanedA && !cleanedB) {
+      return true;
+    }
+
+    if (!cleanedA || !cleanedB) {
+      return false;
+    }
+
+    if (cleanedA === cleanedB) {
+      return true;
+    }
+
+    if (cleanedA.includes(cleanedB) || cleanedB.includes(cleanedA)) {
+      return true;
+    }
+
+    const aTokens = new Set(cleanedA.split(' ').filter(Boolean));
+    const bTokens = new Set(cleanedB.split(' ').filter(Boolean));
+
+    if (!aTokens.size || !bTokens.size) {
+      return false;
+    }
+
+    const intersection = [...aTokens].filter((token) => bTokens.has(token)).length;
+    const union = new Set([...aTokens, ...bTokens]).size;
+    const similarity = union ? intersection / union : 0;
+
+    return similarity >= 0.85;
+  }
+
+  private abrirModalDuplicata(videoId: string, titulo: string, artista: string = ''): void {
+    this.duplicateQueueModal = {
+      visible: true,
+      titulo,
+      artista,
+      videoId,
+    };
+  }
+
+  confirmarAdicionarMesmoAssim(): void {
+    const { videoId, titulo } = this.duplicateQueueModal;
+    this.duplicateQueueModal = { visible: false, titulo: '', artista: '', videoId: '' };
+
+    if (!videoId || !titulo) {
+      return;
+    }
+
+    this.adicionarMusica({
+      id: { videoId },
+      snippet: { title: titulo },
+    });
+  }
+
+  cancelarAdicionarMesmoAssim(): void {
+    this.duplicateQueueModal = { visible: false, titulo: '', artista: '', videoId: '' };
+  }
+
+  onSuggestionSelect(suggestion: any): void {
+    const titulo = this.getResultTitle(suggestion);
+    const videoId = this.getResultVideoId(suggestion);
+
+    if (!titulo || !videoId) {
+      return;
+    }
+
+    this.searchForm.patchValue({ query: titulo });
+    this.searchResults = [];
+    this.selectedSuggestionIndex = -1;
+
+    this.apiService.getQueueView().subscribe({
+      next: (queue) => {
+        const fila = Array.isArray(queue) ? queue : [];
+        const jaExisteNaFila = fila.some((item: any) => {
+          const itemVideoId = item?.videoId || item?.id?.videoId || item?.youtubeId || item?.video_id || '';
+          const itemTitulo = this.getResultTitle(item);
+          const itemArtista = this.getResultArtist(item);
+
+          const sameVideoId = itemVideoId && videoId &&
+            this.normalizeText(itemVideoId.toString()) === this.normalizeText(videoId.toString());
+
+          const sameTitle = this.isApproximateDuplicate(itemTitulo, titulo);
+          const sameArtist = this.areArtistsSimilar(itemArtista, this.getResultArtist(suggestion));
+
+          const sameSongByIdentity =
+            sameVideoId ||
+            (sameTitle && (!itemArtista || !this.getResultArtist(suggestion) || sameArtist));
+
+          if (sameSongByIdentity) {
+            this.abrirModalDuplicata(videoId, itemTitulo, itemArtista);
+          }
+
+          return sameSongByIdentity;
+        });
+
+        if (jaExisteNaFila) {
+          return;
+        }
+
+        this.adicionarMusica({
+          id: { videoId },
+          snippet: { title: titulo },
+        });
+      },
+      error: () => {
+        this.adicionarMusica({
+          id: { videoId },
+          snippet: { title: titulo },
+        });
+      },
+    });
+  }
+
   private parseAndValidateVideoId(url: string): string | null {
-    // 1. Tenta extrair o ID usando uma Regex abrangente:
     const regex =
       /(?:youtube\.com\/(?:live\/|v\/|embed\/|watch\?(?:.*&)?v=)|youtu\.be\/)([^"&?\/\s]{11})/;
     const match = url.match(regex);
 
     let videoId = match ? match[1] : null;
 
-    // 2. Se a regex falhar, tenta extrair de URLs sem domínio (se o usuário colou só o caminho)
     if (!videoId) {
       const shortMatch = url.match(/([^"&?\/\s]{11})$/);
       if (shortMatch && shortMatch[1].length === 11) {
@@ -78,13 +365,13 @@ export class VideoComponent implements OnInit {
       }
     }
 
-    // 3. Validação final: o ID TEM que ter 11 caracteres.
     if (videoId && videoId.length === 11) {
       return videoId;
     }
 
     return null;
   }
+
   private parseVideoId(url: string): string | null {
     let urlObject;
     try {
@@ -112,33 +399,28 @@ export class VideoComponent implements OnInit {
   }
 
   onSearch(): void {
-    if (this.searchForm.invalid) {
+    const query = (this.searchForm.get('query')?.value ?? '').trim();
+
+    if (!query) {
+      this.searchResults = [];
+      this.searchPerformed = false;
       return;
     }
 
     this.isLoading = true;
     this.searchPerformed = true;
-    this.searchResults = [];
 
-    let searchTerm: string = this.searchForm.get('query')?.value || '';
-
-    const searchTermLower = searchTerm.toLowerCase();
-    if (
-      !searchTermLower.includes('karaoke') &&
-      !searchTermLower.includes('karaokê')
-    ) {
-      searchTerm += ' karaoke';
-      console.log('Termo de busca modificado:', searchTerm);
-    }
-
-    this.apiService.buscarVideos(searchTerm).subscribe({
+    this.apiService.buscarVideos(query).subscribe({
       next: (results) => {
-        this.searchResults = results.items || [];
+        this.searchResults = this.normalizeSearchResults(results);
+        this.searchResults = this.searchResults
+          .slice()
+          .sort((a, b) => Number(b.score ?? 0) - Number(a.score ?? 0));
         this.isLoading = false;
-        console.log('Resultados da busca:', this.searchResults);
       },
       error: (err) => {
         console.error('Erro ao buscar vídeos:', err);
+        this.searchResults = [];
         this.isLoading = false;
       },
     });
@@ -150,10 +432,16 @@ export class VideoComponent implements OnInit {
       this.loginService.fazerLogout();
       return;
     }
-    const videoId = video.id.videoId;
-    const videoTitle = video.snippet.title;
+
+    const videoId = video?.videoId || video?.id?.videoId;
+    const videoTitle = video?.titulo || video?.title || video?.snippet?.title || 'Música sem título';
     const nomeUsuario = this.usuarioLogado.nome;
     const telefoneUsuario = this.usuarioLogado.telefone;
+
+    if (!videoId) {
+      console.error('Video sem videoId:', video);
+      return;
+    }
 
     console.log(`Utilizador ${nomeUsuario} a adicionar: ${videoTitle}`);
 
@@ -162,18 +450,15 @@ export class VideoComponent implements OnInit {
       .subscribe({
         next: (response) => {
           const posicao = response.position || 'na fila';
-
           this.loginService.salvarPosicao(posicao);
           this.router.navigate(['/fila']);
         },
         error: (err) => {
           console.error('Erro ao adicionar na fila:', err);
           if (err.status === 409) {
-            // Erro 409: Já tem música na fila
             alert('Erro: Você já tem uma música na fila! Aguarde ela tocar.');
             this.router.navigate(['/fila']);
           } else if (err.status === 423) {
-            // Erro 423: Fila bloqueada
             alert(
               'Desculpe, a fila de músicas está fechada pelo admin neste momento. Tente novamente mais tarde.'
             );
@@ -231,3 +516,4 @@ export class VideoComponent implements OnInit {
       });
   }
 }
+

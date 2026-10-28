@@ -189,7 +189,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
     this.apiService.buscarVideos(searchTerm).subscribe({
       next: (results) => {
-        this.adminSearchResults = results.items || []; 
+        const normalized = Array.isArray(results) ? results : (results && Array.isArray((results as any).items) ? (results as any).items : []);
+        this.adminSearchResults = normalized;
         this.isSearching = false;
         this.hasSearched = true;
       },
@@ -246,8 +247,13 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
         return;
     }
     
-    const videoId = video.id.videoId;
-    const titulo = video.snippet.title;
+    const videoId = video?.videoId || video?.id?.videoId;
+    const titulo = video?.titulo || video?.title || video?.snippet?.title;
+
+    if (!videoId || !titulo) {
+      this.mostrarFeedback('Música inválida para adicionar à fila.');
+      return;
+    }
     
     this.apiService.adminAddSong(nome, videoId, titulo).subscribe({
         next: () => {
