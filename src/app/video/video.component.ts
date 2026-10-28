@@ -153,12 +153,20 @@ export class VideoComponent implements OnInit {
     return [];
   }
 
+  private isIgnoredTopSong(item: any): boolean {
+    const title = this.getResultTitle(item);
+    const normalized = this.normalizeText(title);
+
+    return normalized === 'video por url' || normalized.includes('video por url');
+  }
+
   private carregarTopSongs(): void {
     this.isTopSongsLoading = true;
 
     this.apiService.getTopSongsLast30Days().subscribe({
       next: (results) => {
-        this.topSongs = Array.isArray(results) ? results : [];
+        const filteredResults = Array.isArray(results) ? results.filter((song) => !this.isIgnoredTopSong(song)) : [];
+        this.topSongs = filteredResults;
         this.topSongs.sort((a, b) => Number(b.totalPedidos ?? 0) - Number(a.totalPedidos ?? 0));
         this.isTopSongsLoading = false;
       },
