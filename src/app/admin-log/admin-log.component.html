@@ -1,11 +1,11 @@
 <div class="log-container">
-    <h2>Histórico da Fila (Hoje)</h2>
     <div class="header">
         <h2>Histórico da Fila (Hoje)</h2>
         <a routerLink="/admin/dashboard" class="btn-voltar">
             &larr; Voltar ao Dashboard
         </a>
     </div>
+
     <div *ngIf="isLoading" class="loading">A carregar...</div>
 
     <div *ngIf="error" class="error">{{ error }}</div>
@@ -14,28 +14,56 @@
         <table class="log-table">
             <thead>
                 <tr>
-                    <th>Utilizador</th>
-                    <th>Música (Título)</th>
+                    <th (click)="ordenarPor('ipUsuario')" class="sortable">
+                        IP <br><small>(Não deveria ter iguais)</small> <span class="sort-icon">{{ obterIconeOrdenacao('ipUsuario') }}</span>
+                    </th>
+                    <th (click)="ordenarPor('nomeUsuario')" class="sortable">
+                        Utilizador <span class="sort-icon">{{ obterIconeOrdenacao('nomeUsuario') }}</span>
+                    </th>
+                    <th (click)="ordenarPor('titulo')" class="sortable">
+                        Música (Título) <span class="sort-icon">{{ obterIconeOrdenacao('titulo') }}</span>
+                    </th>
                     <th>Link do Vídeo</th>
-                    <th>Hora Cadastro</th>
-                    <th>Hora Exibição</th>
+                    <th (click)="ordenarPor('horarioCadastro')" class="sortable">
+                        Hora Cadastro <span class="sort-icon">{{ obterIconeOrdenacao('horarioCadastro') }}</span>
+                    </th>
+                    <th (click)="ordenarPor('horarioExibicao')" class="sortable">
+                        Hora Exibição <span class="sort-icon">{{ obterIconeOrdenacao('horarioExibicao') }}</span>
+                    </th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
                 <tr *ngIf="logData.length === 0">
-                    <td colspan="5">Nenhuma música na fila hoje.</td>
+                    <td colspan="6">Nenhuma música na fila hoje.</td>
                 </tr>
 
                 <tr *ngFor="let item of logData">
+                    <td>{{ item.ipUsuario || 'N/A' }}</td>
                     <td>{{ item.nomeUsuario }}</td>
                     <td [innerHTML]="item.titulo"></td>
                     <td>
                         <a [href]="getYouTubeUrl(item.videoId)" target="_blank">
-                            Ver Vídeo (ID: {{ item.videoId }})
+                            Ver Vídeo
                         </a>
                     </td>
                     <td>{{ formatarData(item.horarioCadastro) }}</td>
                     <td>{{ formatarData(item.horarioExibicao) }}</td>
+                    <td>
+                        <button *ngIf="!item.horarioExibicao && !item.motivoCancelamento" class="btn-cancel"
+                            (click)="cancelarMusica(item.telefoneUsuario)">
+                            Remover / Avisar
+                        </button>
+
+                        <div *ngIf="item.motivoCancelamento"
+                            style="color: #dc3545; font-size: 0.85em; font-weight: bold;">
+                            Removida: {{ item.motivoCancelamento }}
+                        </div>
+
+                        <span *ngIf="item.horarioExibicao && !item.motivoCancelamento" class="status-played">
+                            Já tocou
+                        </span>
+                    </td>
                 </tr>
             </tbody>
         </table>

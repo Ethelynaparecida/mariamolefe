@@ -3,14 +3,23 @@
   <div *ngIf="isLoading" class="status-card loading">
     <div class="spinner"></div>
     <p>A verificar a sua posição na fila...</p>
-    <button class="btn-logout" (click)="fazerLogout()">Sair (Logout)</button>
+    <button class="btn-logout-simple" (click)="fazerLogout()">Sair (Logout)</button>
   </div>
 
+  <h3 *ngIf="!isLoading">Olá, {{ usuarioNome }}!</h3>
 
+  <div *ngIf="isCancelada && !isLoading" class="status-card cancelado" style="border: 2px solid #dc3545;">
+    <p>Atenção</p>
+    <div class="posicao-numero" style="font-size: 1.8rem; color: #dc3545;">MÚSICA REMOVIDA</div>
+    <p class="legenda" style="font-size: 1.2rem; margin: 15px 0;">
+      <strong>Motivo:</strong> {{ mensagemCancelamento || 'Não especificado.' }}
+    </p>
+    <p style="color: #dc3545; font-size: 0.9rem; margin-top: 20px; font-weight: bold;">
+      ⚠️ A adição de novas músicas foi bloqueada para este utilizador.
+    </p>
+  </div>
 
-  <h3>Olá, {{ usuarioNome }}!</h3>
-
-  <div [ngSwitch]="posicao" class="status-card">
+  <div *ngIf="!isCancelada && !isLoading" [ngSwitch]="posicao" class="status-card">
 
     <div *ngSwitchDefault class="status-fila">
       <p>Você está na fila!</p>
@@ -40,5 +49,16 @@
 
   </div>
 
-  <button class="btn-logout" (click)="fazerLogout()">Sair (Logout)</button>
+  <div *ngIf="!isLoading && !isCancelada" class="logout-actions-wrapper">
+    
+    <button *ngIf="posicao >= 0" class="btn-logout-prominent" (click)="fazerLogout()">
+      Sair e remover música da fila
+    </button>
+
+    <button *ngIf="posicao === -1" class="btn-logout-simple" (click)="fazerLogout()">
+      Sair (Logout)
+    </button>
+
+  </div>
+
 </div>
