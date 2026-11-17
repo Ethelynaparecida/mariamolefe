@@ -39,7 +39,7 @@
             📺 Abrir tela do video(Player)
           </a>
           <a routerLink="/admin/log" class="btn-link btn-log">
-            📋 Ver Histórico de Músicas (Últimas 4h)
+            📋 Ver Histórico de Músicas (Últimos 15 dias)
           </a>
           <a routerLink="/admin/users" class="btn-link btn-users">
             👤 Ver Lista de Usuarios
@@ -91,6 +91,7 @@
 
           <div class="form-group search-bar" (click)="onDisabledClick()">
             <input type="text" formControlName="query" placeholder="Buscar música..."
+              (input)="onAdminQueryInput()"
               [disabled]="adminSearchForm.get('nome')?.invalid ?? true">
             <button (click)="onAdminSearch($event)"
               [disabled]="adminSearchForm.get('nome')?.invalid || adminSearchForm.get('query')?.value === '' || isSearching">
@@ -123,15 +124,15 @@
     padding: 2px;
     border: #ece7e7 1px solid;
     border-radius: 5px;">
-              <img [src]="video.snippet.thumbnails.default.url" alt="Capa" 
+              <img [src]="getVideoThumbnail(video)" [alt]="getVideoTitle(video)"
                    style="width: auto; height: 60px; object-fit: cover; border-radius: 4px;">
               
               <div style="min-width: 0;"> 
-                <h6 class="mb-0 text-truncate" title="{{ video.snippet.title }}">
-                    {{ video.snippet.title }}
+                <h6 class="mb-0 text-truncate" [title]="getVideoTitle(video)">
+                    {{ getVideoTitle(video) }}
                 </h6>
                 <small class="text-muted text-truncate d-block">
-                  {{ video.snippet.channelTitle }}
+                  {{ video?.artista || video?.artist || video?.channelTitle || video?.snippet?.channelTitle || 'Artista desconhecido' }}
                 </small>
               </div>
               <button class="btn btn-sm add-button" (click)="onAdminAddSong(video)">

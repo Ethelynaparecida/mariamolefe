@@ -1,52 +1,54 @@
-<div class="login-container">
-  <h2>Entrar no Karaokê</h2>
-  <p>Por favor, identifique-se para adicionar músicas à fila.</p>
+<div class="login-page">
+  <div class="login-container">
+    <h2 class="luxury-title"><span>{{ typedText }}</span><span class="cursor">|</span></h2>
+    <p>Por favor, identifique-se para adicionar músicas à fila.</p>
 
-  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
 
-    <div class="form-group">
-      <label for="nome">Nome Completo</label>
-      <input id="nome" type="text" formControlName="nome" placeholder="Seu nome e sobrenome">
-      
-      <div *ngIf="nome?.invalid && (nome?.dirty || nome?.touched)" class="error-message">
-        <span *ngIf="nome?.errors?.['required']">
-          O nome é obrigatório.
-        </span>
-        <span *ngIf="nome?.errors?.['nomeIncompleto'] && !nome?.errors?.['required']">
-          Por favor, insira seu nome e sobrenome.
-        </span>
+      <div class="form-group">
+        <label for="nome">Nome Completo</label>
+        <input id="nome" type="text" formControlName="nome" placeholder="Seu nome e sobrenome">
+
+        <div *ngIf="nome?.invalid && (nome?.dirty || nome?.touched)" class="error-message">
+          <span *ngIf="nome?.errors?.['required']">
+            O nome é obrigatório.
+          </span>
+          <span *ngIf="nome?.errors?.['nomeIncompleto'] && !nome?.errors?.['required']">
+            Por favor, insira seu nome e sobrenome.
+          </span>
+        </div>
       </div>
-    </div>
 
-    <div class="form-group">
-      <label for="email">Email</label>
-      <input id="email" type="email" formControlName="email" placeholder="seu.email@exemplo.com">
-      
-      <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
-        <span *ngIf="email?.errors?.['required']">
-          O email é obrigatório.
-        </span>
-        <span *ngIf="email?.errors?.['email']">
-          Por favor, insira um email válido.
-        </span>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input id="email" type="email" formControlName="email" placeholder="seu.email@exemplo.com">
+
+        <div *ngIf="email?.invalid && (email?.dirty || email?.touched)" class="error-message">
+          <span *ngIf="email?.errors?.['required']">
+            O email é obrigatório.
+          </span>
+          <span *ngIf="email?.errors?.['email']">
+            Por favor, insira um email válido.
+          </span>
+        </div>
       </div>
-    </div>
 
-    <div class="form-group">
-      <label for="telefone">Telefone Celular</label>
-      <input id="telefone" type="tel" formControlName="telefone" placeholder="(xx) xxxxx-xxxx">
-      
-      <div *ngIf="telefone?.invalid && (telefone?.dirty || telefone?.touched)" class="error-message">
-        <span *ngIf="telefone?.errors?.['required']">
-          O telefone é obrigatório.
-        </span>
-        <span *ngIf="telefone?.errors?.['minlength'] || telefone?.errors?.['maxlength']">
-          Insira um número de telefone válido.
-        </span>
+      <div class="form-group">
+        <label for="telefone">Telefone Celular</label>
+        <input id="telefone" type="tel" formControlName="telefone" placeholder="(xx) xxxxx-xxxx">
+
+        <div *ngIf="telefone?.invalid && (telefone?.dirty || telefone?.touched)" class="error-message">
+          <span *ngIf="telefone?.errors?.['required']">
+            O telefone é obrigatório.
+          </span>
+          <span *ngIf="telefone?.errors?.['minlength'] || telefone?.errors?.['maxlength']">
+            Insira um número de telefone válido.
+          </span>
+        </div>
       </div>
-    </div>
 
-    <button type="submit" [disabled]="loginForm.invalid">Entrar</button>
+      <button type="submit" [disabled]="loginForm.invalid">Entrar</button>
 
-  </form>
+    </form>
+  </div>
 </div>

@@ -23,7 +23,7 @@ describe('ApiService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should fallback to YouTube search only when local search returns no results', () => {
+  it('should search YouTube directly with karaoke suffix and return normalized results', () => {
     const searchTerm = 'believer';
     let result: any[] = [];
 
@@ -31,18 +31,12 @@ describe('ApiService', () => {
       result = response;
     });
 
-    const localReq = httpMock.expectOne((req) =>
-      req.method === 'GET' && req.url.includes('/search/local') && req.params.get('q') === searchTerm
-    );
-    expect(localReq.request.method).toBe('GET');
-    localReq.flush([]);
-
     const youtubeReq = httpMock.expectOne((req) =>
-      req.method === 'GET' && req.url.includes('/search') && req.params.get('q') === searchTerm
+      req.method === 'GET' && req.url.includes('/search') && req.params.get('q') === `${searchTerm} karaoke`
     );
     expect(youtubeReq.request.method).toBe('GET');
 
-    youtubeReq.flush([{ titulo: 'Believer', videoId: 'abc123', score: 10 }]);
+    youtubeReq.flush({ items: [{ titulo: 'Believer', videoId: 'abc123', score: 10 }] });
 
     expect(result.length).toBe(1);
     expect(result[0].titulo).toBe('Believer');

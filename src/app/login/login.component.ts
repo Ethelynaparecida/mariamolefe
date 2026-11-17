@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { cpfValidator } from '../validators/cpf.validator'; 
 import { nomeSobrenomeValidator } from '../validators/name.validator';
-import { CommonModule } from '@angular/common'; 
+import { CommonModule } from '@angular/common';
 import { ApiService } from '../service/api.service';
 import { LoginService } from '../service/login.service';
 
@@ -17,9 +16,13 @@ import { LoginService } from '../service/login.service';
   templateUrl: './login.component.html', 
   styleUrls: ['./login.component.less'] 
 })
-export class LoginComponent implements OnInit { 
-
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
+  typedText = '';
+  private phrases = ['ENTRAR NO\nKARAOKÊ', 'BEM-VIND@ À FESTA', 'VEM CANTAR COM A GENTE'];
+  private phraseIndex = 0;
+  private charIndex = 0;
+  private typingTimeout: any;
 
   constructor(
     private fb: FormBuilder,
@@ -28,24 +31,34 @@ export class LoginComponent implements OnInit {
     private loginService: LoginService
   ) {
     this.loginForm = this.fb.group({
-      nome: ['', [
-          Validators.required, 
-          nomeSobrenomeValidator
-        ]
-      ],
+      nome: ['', [Validators.required, nomeSobrenomeValidator]],
       email: ['', [Validators.required, Validators.email]],
-      telefone: ['', [
-              Validators.required, 
-              Validators.minLength(10), 
-              Validators.maxLength(15)  
-            ]
-          ]
+      telefone: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(15)]],
     });
   }
 
   ngOnInit(): void {
+    this.startTypingLoop();
   }
-  
+
+  private startTypingLoop(): void {
+    const phrase = this.phrases[this.phraseIndex];
+
+    if (this.charIndex <= phrase.length) {
+      this.typedText = phrase.slice(0, this.charIndex);
+      this.charIndex += 1;
+      this.typingTimeout = setTimeout(() => this.startTypingLoop(), 90);
+      return;
+    }
+
+    this.typingTimeout = setTimeout(() => {
+      this.charIndex = 0;
+      this.phraseIndex = (this.phraseIndex + 1) % this.phrases.length;
+      this.typedText = '';
+      this.startTypingLoop();
+    }, 1400);
+  }
+
 
   onSubmit(): void {
     if (this.loginForm.valid) {

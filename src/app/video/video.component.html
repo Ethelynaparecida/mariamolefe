@@ -2,6 +2,10 @@
   <h2>Buscar Música</h2>
   <p>Escolha abaixo sua música para adicionar à lista de reprodução.</p>
 
+  <div *ngIf="canReplaceCurrentSong" class="swap-hint">
+    Sua música atual pode ser trocada enquanto ela ainda não estiver entre as próximas a tocar.
+  </div>
+
   <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
     <div class="form-group search-box">
       <input
@@ -53,21 +57,6 @@
 
     <div *ngIf="!isLoading && searchPerformed && searchForm.get('query')?.value?.trim() && searchResults.length === 0" class="no-results">
       <p>Essa é nova, ótima escolha.</p>
-    </div>
-  </form>
-
-  <div class="divider-text">ou</div>
-
-  <form [formGroup]="urlForm" (ngSubmit)="onAddByUrl()">
-    <div class="form-group">
-      <input type="text" formControlName="videoUrl" placeholder="Cole a URL do vídeo do YouTube aqui...">
-      <button type="submit" [disabled]="urlForm.invalid || isAddingByUrl">
-        <span *ngIf="!isAddingByUrl">Adicionar</span>
-        <span *ngIf="isAddingByUrl">...</span>
-      </button>
-    </div>
-    <div *ngIf="urlForm.get('videoUrl')?.invalid && urlForm.get('videoUrl')?.touched" class="error-message">
-      Ou se preferir insira uma URL válida do YouTube.
     </div>
   </form>
 

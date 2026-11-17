@@ -3,14 +3,25 @@
   <div *ngIf="isLoading" class="status-card loading">
     <div class="spinner"></div>
     <p>A verificar a sua posição na fila...</p>
-    <button class="btn-logout" (click)="fazerLogout()">Sair (Logout)</button>
+    <button class="btn-logout" (click)="fazerLogout()">Sair e remover música da fila</button>
   </div>
 
 
 
   <h3>Olá, {{ usuarioNome }}!</h3>
 
+  <div *ngIf="cancelMessage" class="alert-card cancelada" role="alert">
+    <span class="alert-tag" aria-hidden="true">!</span>
+    <p><strong>Aviso:</strong> {{ cancelMessage }}</p>
+  </div>
+
   <div [ngSwitch]="posicao" class="status-card">
+
+    <div *ngIf="canReplaceSong" class="replace-song-row">
+      <button class="btn-trocar-musica" type="button" (click)="trocarMusica()">
+        Trocar música
+      </button>
+    </div>
 
     <div *ngSwitchDefault class="status-fila">
       <p>Você está na fila!</p>
@@ -29,7 +40,7 @@
     </div>
 
     <div *ngSwitchCase="-1" class="status-fila tocado">
-      <p>A sua música já tocou!</p>
+      <p>A sua música foi removida da fila.</p>
       <div class="posicao-numero">🎤</div>
       <p>Obrigado por participar.</p>
 
@@ -40,5 +51,5 @@
 
   </div>
 
-  <button class="btn-logout" (click)="fazerLogout()">Sair (Logout)</button>
+  <button class="btn-logout" (click)="fazerLogout()">Sair e remover música da fila</button>
 </div>

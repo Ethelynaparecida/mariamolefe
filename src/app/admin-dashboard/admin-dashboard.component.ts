@@ -30,6 +30,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
 
   public adminSearchForm: FormGroup;
   public adminSearchResults: any[] = [];
+  public localSearchSuggestions: any[] = [];
+  public youtubeSearchResults: any[] = [];
 
   public isSearching: boolean = false;
   public hasSearched: boolean = false;
@@ -41,6 +43,8 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
   public errorVideoId: string | null = null;
   public errorMessage: string | null = null;
   public errorUserName: string | null = null;
+
+  private adminQueryDebounceTimer: any = null;
 
   constructor(
     private apiService: ApiService,
@@ -169,33 +173,109 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
+  getVideoThumbnail(video: any): string {
+    const candidates = [
+      video?.thumbnailUrl,
+      video?.thumbnail_url,
+      video?.thumbnail,
+      video?.miniatura,
+      video?.imagem,
+      video?.imageUrl,
+      video?.image_url,
+      video?.artwork,
+      video?.cover,
+      video?.snippet?.thumbnails?.default?.url,
+      video?.snippet?.thumbnails?.medium?.url,
+      video?.snippet?.thumbnails?.high?.url,
+    ];
+
+    const url = candidates.find((candidate) => typeof candidate === 'string' && candidate.trim().length > 0);
+
+    return url && url.trim() ? url : 'https://placehold.co/80x80/eeeeee/666666?text=M';
+  }
+
+  getVideoTitle(video: any): string {
+    return video?.titulo || video?.title || video?.snippet?.title || 'Música sem título';
+  }
+
+  onAdminQueryInput(): void {
+    const queryValue = (this.adminSearchForm.get('query')?.value ?? '').trim();
+
+    if (this.adminQueryDebounceTimer) {
+      clearTimeout(this.adminQueryDebounceTimer);
+    }
+
+    if (!queryValue) {
+      this.localSearchSuggestions = [];
+      this.youtubeSearchResults = [];
+      this.adminSearchResults = [];
+      this.hasSearched = false;
+      return;
+    }
+
+    this.adminQueryDebounceTimer = setTimeout(() => {
+      this.apiService.getLocalSearchSuggestions(queryValue).subscribe({
+        next: (results) => {
+          const normalized = Array.isArray(results) ? results : [];
+          this.localSearchSuggestions = normalized.slice(0, 8);
+          this.adminSearchResults = this.localSearchSuggestions;
+          this.hasSearched = false;
+        },
+        error: () => {
+          this.localSearchSuggestions = [];
+          this.youtubeSearchResults = [];
+          this.adminSearchResults = [];
+          this.hasSearched = false;
+        }
+      });
+    }, 250);
+  }
+
+  private buildYoutubeSearchTerm(queryValue: string): string {
+    const trimmed = (queryValue ?? '').trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    const lowerQuery = trimmed.toLowerCase();
+    if (lowerQuery.includes('karaoke') || lowerQuery.includes('karaokê')) {
+      return trimmed;
+    }
+
+    return `${trimmed} karaoke`;
+  }
+
   onAdminSearch($event: Event): void {
     if (this.adminSearchForm.get('nome')?.valid) {
       $event.stopPropagation(); 
     }
     
-    const queryValue = this.adminSearchForm.get('query')?.value;
-    if (!queryValue) return;
+    const queryValue = this.adminSearchForm.get('query')?.value ?? '';
+    const searchTerm = this.buildYoutubeSearchTerm(queryValue);
 
+    if (!searchTerm) return;
+
+    if (this.adminQueryDebounceTimer) {
+      clearTimeout(this.adminQueryDebounceTimer);
+    }
+
+    this.localSearchSuggestions = [];
     this.isSearching = true;
     this.hasSearched = false;
     this.adminSearchResults = [];
 
-    let searchTerm: string = queryValue;
-    const searchTermLower = searchTerm.toLowerCase();
-    if (!searchTermLower.includes('karaoke') && !searchTermLower.includes('karaokê')) {
-      searchTerm += ' karaoke';
-    }
-
-    this.apiService.buscarVideos(searchTerm).subscribe({
+    this.apiService.searchYoutubeVideos(searchTerm).subscribe({
       next: (results) => {
-        const normalized = Array.isArray(results) ? results : (results && Array.isArray((results as any).items) ? (results as any).items : []);
-        this.adminSearchResults = normalized;
+        const normalized = Array.isArray(results) ? results : [];
+        this.youtubeSearchResults = normalized.slice(0, 10);
+        this.adminSearchResults = this.youtubeSearchResults;
         this.isSearching = false;
         this.hasSearched = true;
       },
       error: (err) => {
         console.error('Erro ao buscar vídeos (Admin):', err);
+        this.youtubeSearchResults = [];
+        this.adminSearchResults = [];
         this.isSearching = false;
         this.hasSearched = true;
       }

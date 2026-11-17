@@ -18,6 +18,8 @@ export class PositionComponent implements OnInit, OnDestroy {
   private usuarioTelefone: string | null = null;
   posicao: number = -2; // -2 = Carregando
   isLoading: boolean = true;
+  cancelMessage: string | null = null;
+  canReplaceSong: boolean = false;
   private pollingSubscription: Subscription | null = null;
   private readonly POLLING_INTERVAL_MS = 3000; 
 
@@ -63,14 +65,23 @@ export class PositionComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
-          this.posicao = response.position; 
-          
-          
+          this.posicao = response.position;
+          this.canReplaceSong = this.posicao > 1;
+
+          if (this.posicao >= 0 && this.posicao !== -1) {
+            this.cancelMessage = null;
+          }
+
+          this.apiService.getCancelStatus(this.usuarioTelefone!).subscribe({
+            next: (cancelStatus) => this.setCancelMessage(cancelStatus),
+            error: () => this.setCancelMessage(null)
+          });
+
           this.isLoading = false;
           this.errorCounter = 0;
           this.loginService.salvarPosicao(String(this.posicao));
           if (this.posicao === -1) { this.stopPolling(); }
-          
+
         },
         error: (err) => {
           console.error("Erro ao verificar posição:", err);
@@ -93,8 +104,22 @@ export class PositionComponent implements OnInit, OnDestroy {
     }
   }
 
+  setCancelMessage(response: { cancelada?: boolean; mensagem?: string } | null): void {
+    if (!response || response.cancelada !== true) {
+      this.cancelMessage = null;
+      return;
+    }
+
+    this.cancelMessage = response.mensagem || 'Sua música foi removida da fila.';
+  }
+
   adicionarOutraMusica(): void {
+    this.cancelMessage = null;
     this.loginService.salvarPosicao(null);
+    this.router.navigate(['/buscar']);
+  }
+
+  trocarMusica(): void {
     this.router.navigate(['/buscar']);
   }
 

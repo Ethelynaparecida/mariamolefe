@@ -1,70 +1,120 @@
 .log-container {
   max-width: 1200px;
   margin: 30px auto;
-  padding: 20px;
+  padding: 24px;
   font-family: Arial, sans-serif;
-  
-  h2 { text-align: center; }
-  .loading, .error { text-align: center; padding: 20px; font-size: 1.2em; }
-  .error { color: red; }
+  color: #e2e8f0;
+  background: linear-gradient(180deg, #0b1020 0%, #111827 100%);
+  border-radius: 18px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
+
+  h2 {
+    text-align: center;
+    color: #f8fbff;
+  }
+
+  .loading, .error {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.2em;
+  }
+
+  .error {
+    color: #fca5a5;
+  }
+
   .header {
     display: flex;
-    justify-content: space-between; // Coloca o título de um lado, botão do outro
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
     padding-bottom: 15px;
-    
-    h2 { 
-      text-align: left; 
+
+    h2 {
+      text-align: left;
       margin: 0;
       font-size: 1.8em;
     }
-    
+
     .btn-voltar {
       display: inline-block;
       padding: 10px 18px;
-      background-color: #6c757d; // Cor de "voltar" (cinza)
-      color: white !important; // Garante que o texto é branco
+      background: linear-gradient(135deg, #64748b, #475569);
+      color: white !important;
       text-decoration: none;
-      border-radius: 5px;
+      border-radius: 10px;
       font-weight: bold;
-      
+
       &:hover {
-        background-color: #5a6268;
+        background: linear-gradient(135deg, #94a3b8, #475569);
       }
     }
   }
 }
 
 .log-table-wrapper {
-  overflow-x: auto; // Permite scroll horizontal em telemóveis
+  overflow-x: auto;
 }
 
 .log-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  background: rgba(15, 23, 42, 0.7);
 
   th, td {
-    border: 1px solid #ddd;
+    border: 1px solid rgba(148, 163, 184, 0.18);
     padding: 10px;
     text-align: left;
     font-size: 0.9em;
+    color: #e2e8f0;
+    vertical-align: top;
   }
 
   th {
-    background-color: #f4f4f4;
+    background: rgba(30, 41, 59, 0.95);
     font-weight: bold;
+    color: #f8fbff;
   }
 
   tbody tr:nth-child(odd) {
-    background-color: #f9f9f9;
+    background: rgba(15, 23, 42, 0.55);
   }
-  
+
+  tbody tr:nth-child(even) {
+    background: rgba(30, 41, 59, 0.35);
+  }
+
   td a {
-    color: #007bff;
+    color: #7dd3fc;
     text-decoration: none;
-    &:hover { text-decoration: underline; }
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sort-icon {
+  color: #93c5fd;
+}
+
+.btn-cancelar {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.status-played {
+  color: #86efac;
+  font-weight: 600;
 }

@@ -28,13 +28,16 @@ export class VideoComponent implements OnInit {
 
   searchForm: FormGroup;
   searchResults: any[] = [];
+  localSuggestions: any[] = [];
+  youtubeResults: any[] = [];
   topSongs: any[] = [];
   isLoading: boolean = false;
   isTopSongsLoading: boolean = false;
   searchPerformed: boolean = false;
   selectedSuggestionIndex: number = -1;
-  urlForm: FormGroup;
-  isAddingByUrl: boolean = false;
+  currentQueuePosition: number = -2;
+  canReplaceCurrentSong: boolean = false;
+  isReplacingCurrentSong: boolean = false;
   duplicateQueueModal = {
     visible: false,
     titulo: '',
@@ -58,17 +61,6 @@ export class VideoComponent implements OnInit {
     this.searchForm = this.fb.group({
       query: ['', Validators.required],
     });
-    this.urlForm = this.fb.group({
-      videoUrl: [
-        '',
-        [
-          Validators.required,
-          Validators.pattern(
-            /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/
-          ),
-        ],
-      ],
-    });
   }
 
   @HostListener('document:click', ['$event'])
@@ -79,6 +71,8 @@ export class VideoComponent implements OnInit {
 
     const target = event.target as Node;
     if (!this.searchContainer.nativeElement.contains(target)) {
+      this.localSuggestions = [];
+      this.youtubeResults = [];
       this.searchResults = [];
       this.selectedSuggestionIndex = -1;
     }
@@ -93,7 +87,28 @@ export class VideoComponent implements OnInit {
 
     this.usuarioLogado = this.loginService.getUsuarioLogado();
     console.log('Utilizador logado:', this.usuarioLogado?.nome);
+    this.verificarPosicaoUsuario();
     this.carregarTopSongs();
+  }
+
+  private verificarPosicaoUsuario(): void {
+    if (!this.usuarioLogado?.telefone) {
+      this.currentQueuePosition = -2;
+      this.canReplaceCurrentSong = false;
+      return;
+    }
+
+    this.apiService.verPosicao(this.usuarioLogado.telefone).subscribe({
+      next: (response) => {
+        const posicao = Number(response?.position ?? -2);
+        this.currentQueuePosition = Number.isFinite(posicao) ? posicao : -2;
+        this.canReplaceCurrentSong = this.currentQueuePosition > 1;
+      },
+      error: () => {
+        this.currentQueuePosition = -2;
+        this.canReplaceCurrentSong = false;
+      },
+    });
   }
 
   onQueryInput(): void {
@@ -101,6 +116,8 @@ export class VideoComponent implements OnInit {
 
     if (!query) {
       this.searchPerformed = false;
+      this.localSuggestions = [];
+      this.youtubeResults = [];
       this.searchResults = [];
       this.selectedSuggestionIndex = -1;
       if (this.queryDebounceTimer) {
@@ -118,14 +135,15 @@ export class VideoComponent implements OnInit {
     this.queryDebounceTimer = setTimeout(() => {
       this.apiService.getLocalSearchSuggestions(query).subscribe({
         next: (results) => {
-          this.searchResults = this.normalizeSearchResults(results);
-          this.searchResults = this.searchResults
+          this.localSuggestions = this.normalizeSearchResults(results)
             .slice()
             .sort((a, b) => Number(b.score ?? 0) - Number(a.score ?? 0));
+          this.searchResults = this.localSuggestions;
           this.selectedSuggestionIndex = this.searchResults.length > 0 ? 0 : -1;
           this.isLoading = false;
         },
         error: () => {
+          this.localSuggestions = [];
           this.searchResults = [];
           this.selectedSuggestionIndex = -1;
           this.isLoading = false;
@@ -186,17 +204,32 @@ export class VideoComponent implements OnInit {
   }
 
   getResultThumbnail(item: any): string {
-    return (
-      item?.thumbnail ||
-      item?.miniatura ||
-      item?.imagem ||
-      item?.thumbnailUrl ||
-      item?.artwork ||
-      item?.snippet?.thumbnails?.default?.url ||
-      item?.snippet?.thumbnails?.medium?.url ||
-      item?.snippet?.thumbnails?.high?.url ||
-      'https://placehold.co/80x80/eeeeee/666666?text=M'
-    );
+    const candidates = [
+      item?.thumbnailUrl,
+      item?.thumbnail_url,
+      item?.thumbnail,
+      item?.miniatura,
+      item?.imagem,
+      item?.imageUrl,
+      item?.image_url,
+      item?.artwork,
+      item?.cover,
+      item?.snippet?.thumbnails?.default?.url,
+      item?.snippet?.thumbnails?.medium?.url,
+      item?.snippet?.thumbnails?.high?.url,
+    ];
+
+    const url = candidates.find((candidate) => typeof candidate === 'string' && candidate.trim().length > 0);
+    if (url && url.trim()) {
+      return url;
+    }
+
+    const videoId = item?.videoId || item?.id?.videoId || item?.youtubeId || item?.video_id || item?.id || '';
+    if (videoId && videoId.toString().trim().length === 11) {
+      return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+    }
+
+    return 'https://placehold.co/80x80/eeeeee/666666?text=M';
   }
 
   getResultVideoId(item: any): string {
@@ -415,19 +448,28 @@ export class VideoComponent implements OnInit {
       return;
     }
 
+    if (this.queryDebounceTimer) {
+      clearTimeout(this.queryDebounceTimer);
+    }
+
+    this.localSuggestions = [];
+    this.youtubeResults = [];
+    this.searchResults = [];
+    this.selectedSuggestionIndex = -1;
     this.isLoading = true;
     this.searchPerformed = true;
 
     this.apiService.buscarVideos(query).subscribe({
       next: (results) => {
-        this.searchResults = this.normalizeSearchResults(results);
-        this.searchResults = this.searchResults
-          .slice()
+        this.youtubeResults = this.normalizeSearchResults(results)
+          .slice(0, 10)
           .sort((a, b) => Number(b.score ?? 0) - Number(a.score ?? 0));
+        this.searchResults = this.youtubeResults;
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Erro ao buscar vídeos:', err);
+        this.youtubeResults = [];
         this.searchResults = [];
         this.isLoading = false;
       },
@@ -445,24 +487,51 @@ export class VideoComponent implements OnInit {
     const videoTitle = video?.titulo || video?.title || video?.snippet?.title || 'Música sem título';
     const nomeUsuario = this.usuarioLogado.nome;
     const telefoneUsuario = this.usuarioLogado.telefone;
+    const thumbnailUrl = this.getResultThumbnail(video);
 
     if (!videoId) {
       console.error('Video sem videoId:', video);
       return;
     }
 
-    console.log(`Utilizador ${nomeUsuario} a adicionar: ${videoTitle}`);
+    if (this.canReplaceCurrentSong && this.currentQueuePosition > 1) {
+      this.isReplacingCurrentSong = true;
+      this.apiService.removeUserSong(telefoneUsuario).subscribe({
+        next: () => this.finalizarAdicaoNaFila(videoId, videoTitle, nomeUsuario, telefoneUsuario, thumbnailUrl),
+        error: () => this.finalizarAdicaoNaFila(videoId, videoTitle, nomeUsuario, telefoneUsuario, thumbnailUrl),
+      });
+      return;
+    }
 
+    this.finalizarAdicaoNaFila(videoId, videoTitle, nomeUsuario, telefoneUsuario, thumbnailUrl);
+  }
+
+  private finalizarAdicaoNaFila(
+    videoId: string,
+    videoTitle: string,
+    nomeUsuario: string,
+    telefoneUsuario: string,
+    thumbnailUrl: string
+  ): void {
     this.apiService
-      .adicionarNaFila(videoId, videoTitle, nomeUsuario, telefoneUsuario)
+      .adicionarNaFila(videoId, videoTitle, nomeUsuario, telefoneUsuario, thumbnailUrl)
       .subscribe({
         next: (response) => {
           const posicao = response.position || 'na fila';
           this.loginService.salvarPosicao(posicao);
+          const posicaoNumerica = Number(response?.position ?? this.currentQueuePosition);
+          this.currentQueuePosition = Number.isFinite(posicaoNumerica) ? posicaoNumerica : this.currentQueuePosition;
+          this.canReplaceCurrentSong = false;
+          this.isReplacingCurrentSong = false;
+          this.searchPerformed = false;
+          this.searchResults = [];
+          this.localSuggestions = [];
+          this.youtubeResults = [];
           this.router.navigate(['/fila']);
         },
         error: (err) => {
           console.error('Erro ao adicionar na fila:', err);
+          this.isReplacingCurrentSong = false;
           if (err.status === 409) {
             alert('Erro: Você já tem uma música na fila! Aguarde ela tocar.');
             this.router.navigate(['/fila']);
@@ -473,53 +542,6 @@ export class VideoComponent implements OnInit {
           } else {
             alert('Ocorreu um erro ao adicionar a música.');
           }
-        },
-      });
-  }
-
-  onAddByUrl(): void {
-    if (this.urlForm.invalid || !this.usuarioLogado) {
-      return;
-    }
-
-    this.isAddingByUrl = true;
-    const url = this.urlForm.get('videoUrl')?.value;
-    const videoId = this.parseAndValidateVideoId(url);
-
-    if (!videoId) {
-      alert('URL do YouTube inválida. Verifique o link e tente novamente.');
-      this.isAddingByUrl = false;
-      return;
-    }
-
-    const titulo = 'Video por url';
-
-    this.apiService
-      .adicionarNaFila(
-        videoId,
-        titulo,
-        this.usuarioLogado!.nome,
-        this.usuarioLogado!.telefone
-      )
-      .subscribe({
-        next: (response) => {
-          const posicao = response.position || 'na fila';
-          this.loginService.salvarPosicao(posicao);
-          this.router.navigate(['/fila']);
-          this.isAddingByUrl = false;
-        },
-        error: (err) => {
-          if (err.status === 409) {
-            alert('Erro: Você já tem uma música na fila! Aguarde ela tocar.');
-            this.router.navigate(['/fila']);
-          } else if (err.status === 423) {
-            alert(
-              'Desculpe, a fila de músicas está fechada, e não aceita novos pedidos. Agradecemos a preferência!'
-            );
-          } else {
-            alert('Ocorreu um erro ao adicionar a música.');
-          }
-          this.isAddingByUrl = false;
         },
       });
   }

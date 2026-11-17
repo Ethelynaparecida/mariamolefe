@@ -1,101 +1,175 @@
 .position-container {
-  max-width: 500px;
-  margin: 40px auto;
-  padding: 20px;
-  font-family: Arial, sans-serif;
+  max-width: 560px;
+  margin: 36px auto;
+  padding: 28px 22px 24px;
+  border: 1.5px solid rgba(255, 79, 179, 0.8);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(10, 16, 27, 0.96), rgba(8, 12, 20, 0.96));
+  box-shadow: 0 0 0 1px rgba(255, 79, 179, 0.18), 0 0 22px rgba(255, 79, 179, 0.18), 0 24px 70px var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
   text-align: center;
 
   h3 {
-    font-size: 1.5em;
-    color: #333;
-    margin-bottom: 20px;
+    margin: 0 0 18px;
+    font-size: clamp(1.4rem, 2vw, 1.9rem);
+    color: var(--text);
   }
 }
 
-.status-card {
-  padding: 30px;
+.alert-card {
+  width: min(92%, 430px);
+  margin: 0 auto 18px;
+  padding: 10px 14px;
   border-radius: 12px;
-  background-color: #f8f9fa;
-  border: 1px solid #e0e0e0;
-  min-height: 250px;
+  border: 1px solid rgba(255, 122, 162, 0.28);
+  border-left: 6px solid var(--pink);
+  background: rgba(255, 122, 162, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+
+  .alert-tag {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--pink) 0%, var(--purple) 100%);
+    color: var(--text);
+    font-weight: 700;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.95em;
+    line-height: 1.4;
+  }
+}
+
+.replace-song-row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.btn-trocar-musica,
+.btn-adicionar {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: transform 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+  }
+}
+
+.btn-trocar-musica {
+  background: linear-gradient(135deg, var(--pink) 0%, var(--purple) 100%);
+  color: var(--text);
+  box-shadow: 0 12px 24px rgba(255, 79, 179, 0.28);
+}
+
+.status-card {
+  padding: 28px 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1.5px solid rgba(255, 79, 179, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(255, 79, 179, 0.12), 0 0 18px rgba(255, 79, 179, 0.12);
+  min-height: 240px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 
   &.loading {
-    color: #666;
+    color: var(--muted);
   }
 
   .posicao-numero {
-    font-size: 5em;
-    font-weight: bold;
-    color: #007bff;
-    margin: 10px 0;
+    font-size: clamp(2.8rem, 7vw, 5rem);
+    font-weight: 800;
+    color: var(--cyan);
+    margin: 12px 0;
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 18px rgba(101, 229, 255, 0.7);
   }
 
   p {
     margin: 0;
-    font-size: 1.2em;
-    color: #555;
+    font-size: 1.15em;
+    color: var(--text);
   }
 
   .legenda {
-    font-size: 1em;
-    color: #777;
+    font-size: 0.95em;
+    color: var(--muted);
   }
 
   &.proximo .posicao-numero {
-    font-size: 2.5em;
-    color: #ffc107; 
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    color: var(--warning);
+    text-shadow: 0 0 18px rgba(255, 209, 102, 0.7);
   }
-  
+
   &.tocando .posicao-numero {
-    font-size: 2.5em;
-    color: #28a745; 
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    color: var(--success);
+    text-shadow: 0 0 18px rgba(126, 240, 181, 0.7);
   }
 
   &.tocado {
     .posicao-numero {
-      font-size: 4em;
+      font-size: clamp(2.4rem, 6vw, 4rem);
     }
-    p { font-size: 1.1em; }
+
+    p {
+      font-size: 1.05em;
+    }
   }
 }
 
 .btn-adicionar {
-  margin-top: 25px;
-  padding: 12px 20px;
-  font-size: 1em;
-  font-weight: bold;
-  color: #fff;
-  background-color: #007bff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-
-  &:hover {
-    background-color: #0056b3;
-  }
+  margin-top: 20px;
+  background: linear-gradient(135deg, var(--cyan) 0%, #7fa8ff 100%);
+  color: #06131d;
+  box-shadow: 0 12px 24px rgba(101, 229, 255, 0.18);
 }
 
 .btn-logout {
   margin-top: 20px;
-  background: none;
-  border: none;
-  color: #999;
-  text-decoration: underline;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 79, 179, 0.6);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 0 0 1px rgba(255, 79, 179, 0.08), 0 0 12px rgba(255, 79, 179, 0.1);
+  color: var(--muted);
   cursor: pointer;
   font-size: 0.9em;
+  font-weight: 700;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 
   &:hover {
-    color: #d9534f; 
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: var(--text);
+    transform: translateY(-1px);
   }
 }
 
 .spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  border: 4px solid rgba(255, 255, 255, 0.08);
+  border-top: 4px solid var(--cyan);
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -106,18 +180,4 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-.btn-logout {
-  margin-top: 20px;
-  background: none;
-  border: none;
-  color: #999;
-  text-decoration: underline;
-  cursor: pointer;
-  font-size: 0.9em;
-
-  &:hover {
-    color: #d9534f; // Vermelho
-  }
 }

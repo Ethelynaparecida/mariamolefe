@@ -100,4 +100,10 @@ describe('VideoComponent', () => {
     expect(component.duplicateQueueModal.visible).toBeFalse();
     expect(addSpy).toHaveBeenCalled();
   });
+
+  it('should generate a YouTube thumbnail fallback from videoId when no thumbnail is present', () => {
+    const thumbnail = component.getResultThumbnail({ videoId: 'abc123xyz45' });
+
+    expect(thumbnail).toBe('https://i.ytimg.com/vi/abc123xyz45/hqdefault.jpg');
+  });
 });

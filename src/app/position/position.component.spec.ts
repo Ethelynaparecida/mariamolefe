@@ -1,6 +1,9 @@
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { PositionComponent } from './position.component';
+import { LoginService } from '../service/login.service';
 
 describe('PositionComponent', () => {
   let component: PositionComponent;
@@ -8,7 +11,7 @@ describe('PositionComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PositionComponent]
+      imports: [PositionComponent, HttpClientTestingModule, RouterTestingModule]
     })
     .compileComponents();
 
@@ -19,5 +22,11 @@ describe('PositionComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should expose the cancellation message from the API', () => {
+    component.setCancelMessage({ cancelada: true, mensagem: 'Vídeo inadequado' });
+
+    expect(component.cancelMessage).toBe('Vídeo inadequado');
   });
 });

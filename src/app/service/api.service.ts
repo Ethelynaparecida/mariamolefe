@@ -9,16 +9,52 @@ import { catchError, map, switchMap } from 'rxjs/operators';
 export class ApiService {
 
   private readonly BASE_URL = 'https://mariamole.onrender.com/api';
-  // private readonly BASE_URL = 'http://localhost:8080/api';
+   //private readonly BASE_URL = 'http://localhost:8080/api';
   constructor(private http: HttpClient) { }
 
   login(apelido: string): Observable<any> {
     return this.http.post(`${this.BASE_URL}/login`, { apelido: apelido });
   }
 
+  private buildYoutubeThumbnailUrl(videoId: string | null | undefined): string {
+    const normalizedVideoId = (videoId ?? '').toString().trim();
+    return normalizedVideoId ? `https://i.ytimg.com/vi/${normalizedVideoId}/hqdefault.jpg` : '';
+  }
+
+  private normalizeSongItem(item: any): any {
+    if (!item || typeof item !== 'object') {
+      return item;
+    }
+
+    const normalized = { ...item };
+    const thumbnailCandidates = [
+      normalized.thumbnailUrl,
+      normalized.thumbnail_url,
+      normalized.thumbnail,
+      normalized.miniatura,
+      normalized.imageUrl,
+      normalized.image_url,
+      normalized.artwork,
+      normalized.cover,
+      normalized.snippet?.thumbnails?.default?.url,
+      normalized.snippet?.thumbnails?.medium?.url,
+      normalized.snippet?.thumbnails?.high?.url,
+      normalized.defaultThumbnailUrl,
+      normalized.urlImagem,
+    ];
+
+    const resolvedThumbnail = thumbnailCandidates.find((candidate) => typeof candidate === 'string' && candidate.trim().length > 0)
+      ?? this.buildYoutubeThumbnailUrl(
+          normalized.videoId || normalized.id?.videoId || normalized.youtubeId || normalized.video_id || normalized.id
+        );
+    normalized.thumbnailUrl = resolvedThumbnail;
+
+    return normalized;
+  }
+
   private normalizeResultList(payload: any): any[] {
     if (Array.isArray(payload)) {
-      return payload;
+      return payload.map((item) => this.normalizeSongItem(item));
     }
 
     if (!payload || typeof payload !== 'object') {
@@ -36,37 +72,42 @@ export class ApiService {
 
     for (const candidate of candidates) {
       if (Array.isArray(candidate)) {
-        return candidate;
+        return candidate.map((item) => this.normalizeSongItem(item));
       }
     }
 
     return [];
   }
 
-  buscarVideos(termo: string): Observable<any[]> {
+  private buildYoutubeSearchTerm(termo: string): string {
     const query = (termo ?? '').trim();
+    if (!query) {
+      return '';
+    }
+
+    const normalized = query.toLowerCase();
+    if (normalized.includes('karaoke') || normalized.includes('karaokê')) {
+      return query;
+    }
+
+    return `${query} karaoke`;
+  }
+
+  buscarVideos(termo: string): Observable<any[]> {
+    const query = this.buildYoutubeSearchTerm(termo);
 
     if (!query) {
       return of([]);
     }
 
-    return this.http.get<any[]>(`${this.BASE_URL}/search/local`, { params: { q: query } }).pipe(
-      switchMap((localResults) => {
-        const results = this.normalizeResultList(localResults);
-        if (results.length > 0) {
-          return of(results);
-        }
-
-        return this.http.get<any[]>(`${this.BASE_URL}/search`, { params: { q: query } }).pipe(
-          map((youtubeResults) => this.normalizeResultList(youtubeResults)),
-          catchError(() => of([]))
-        );
-      }),
-      catchError(() => this.http.get<any[]>(`${this.BASE_URL}/search`, { params: { q: query } }).pipe(
-        map((youtubeResults) => this.normalizeResultList(youtubeResults)),
-        catchError(() => of([]))
-      ))
+    return this.http.get<any[]>(`${this.BASE_URL}/search`, { params: { q: query } }).pipe(
+      map((youtubeResults) => this.normalizeResultList(youtubeResults).slice(0, 10)),
+      catchError(() => of([]))
     );
+  }
+
+  searchYoutubeVideos(termo: string): Observable<any[]> {
+    return this.buscarVideos(termo);
   }
 
   getLocalSearchSuggestions(termo: string): Observable<any[]> {
@@ -83,18 +124,23 @@ export class ApiService {
     return this.http.get<any[]>(`${this.BASE_URL}/queue/top-10/last-30-days`);
   }
 
-  adicionarNaFila(videoId: string, titulo: string, nome: string, telefone: string): Observable<any> {
+  adicionarNaFila(videoId: string, titulo: string, nome: string, telefone: string, thumbnailUrl?: string): Observable<any> {
     const body = {
       videoId: videoId,
       titulo: titulo,
       nome: nome,
-      telefone: telefone
+      telefone: telefone,
+      thumbnailUrl: thumbnailUrl || this.buildYoutubeThumbnailUrl(videoId)
     };
     return this.http.post(`${this.BASE_URL}/queue/add`, body);
   }
 
   verPosicao(telefoneUsuario: string): Observable<any> {
     return this.http.get(`${this.BASE_URL}/queue/position/${telefoneUsuario}`); 
+  }
+
+  getCancelStatus(telefoneUsuario: string): Observable<{ cancelada: boolean; mensagem?: string }> {
+    return this.http.get<{ cancelada: boolean; mensagem?: string }>(`${this.BASE_URL}/queue/cancel-status/${telefoneUsuario}`);
   }
 
   getProximaMusica(): Observable<any> {
@@ -137,6 +183,14 @@ export class ApiService {
   getLogDoDia(): Observable<any[]> {
     return this.http.get<any[]>(`${this.BASE_URL}/admin/log/dia`);
   }
+
+  cancelSong(telefone: string, mensagem?: string): Observable<any> {
+    return this.http.post(`${this.BASE_URL}/queue/cancel`, {
+      telefone,
+      mensagem: mensagem || 'Cancelado pelo admin'
+    });
+  }
+
   fazerLogin(dadosUsuario: { nome: string; email: string; telefone: string }): Observable<any> { 
     return this.http.post(`${this.BASE_URL}/login`, dadosUsuario);
   }
@@ -145,11 +199,12 @@ export class ApiService {
     return this.http.get<any[]>(`${this.BASE_URL}/admin/users`);
   }
 
-  adminAddSong(nome: string, videoId: string, titulo: string): Observable<any> {
+  adminAddSong(nome: string, videoId: string, titulo: string, thumbnailUrl?: string): Observable<any> {
     const body = {
       nome: nome,
       videoId: videoId,
-      titulo: titulo
+      titulo: titulo,
+      thumbnailUrl: thumbnailUrl || this.buildYoutubeThumbnailUrl(videoId)
     };
     return this.http.post(`${this.BASE_URL}/admin/queue/add`, body);
   }

@@ -1,43 +1,127 @@
 <div class="log-container">
-    <h2>Histórico da Fila (Hoje)</h2>
     <div class="header">
-        <h2>Histórico da Fila (Hoje)</h2>
+        <h2>Histórico da Fila (Últimos 15 dias)</h2>
         <a routerLink="/admin/dashboard" class="btn-voltar">
             &larr; Voltar ao Dashboard
         </a>
     </div>
-    <div *ngIf="isLoading" class="loading">A carregar...</div>
 
+    <div *ngIf="isLoading" class="loading">A carregar...</div>
     <div *ngIf="error" class="error">{{ error }}</div>
 
     <div *ngIf="!isLoading && !error" class="log-table-wrapper">
-        <table class="log-table">
-            <thead>
-                <tr>
-                    <th>Utilizador</th>
-                    <th>Música (Título)</th>
-                    <th>Link do Vídeo</th>
-                    <th>Hora Cadastro</th>
-                    <th>Hora Exibição</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngIf="logData.length === 0">
-                    <td colspan="5">Nenhuma música na fila hoje.</td>
-                </tr>
+        <div *ngIf="getFilaAtiva().length > 0; else semFilaAtiva">
+            <h3>Músicas na fila</h3>
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th (click)="ordenarPor('posicaoFila')" class="sortable">
+                            Posição na fila <span class="sort-icon">{{ obterIconeOrdenacao('posicaoFila') }}</span>
+                        </th>
+                        <th (click)="ordenarPor('ipUsuario')" class="sortable">
+                            IP <span class="sort-icon">{{ obterIconeOrdenacao('ipUsuario') }}</span>
+                        </th>
+                        <th (click)="ordenarPor('nomeUsuario')" class="sortable">
+                            Utilizador <span class="sort-icon">{{ obterIconeOrdenacao('nomeUsuario') }}</span>
+                        </th>
+                        <th (click)="ordenarPor('titulo')" class="sortable">
+                            Música (Título) <span class="sort-icon">{{ obterIconeOrdenacao('titulo') }}</span>
+                        </th>
+                        <th>Link do Vídeo</th>
+                        <th (click)="ordenarPor('horarioCadastro')" class="sortable">
+                            Hora Cadastro <span class="sort-icon">{{ obterIconeOrdenacao('horarioCadastro') }}</span>
+                        </th>
+                        <th (click)="ordenarPor('horarioExibicao')" class="sortable">
+                            Hora Exibição <span class="sort-icon">{{ obterIconeOrdenacao('horarioExibicao') }}</span>
+                        </th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of getFilaAtiva()">
+                        <td><strong>{{ getPosicaoFila(item) }}</strong></td>
+                        <td>{{ getIpUsuario(item) }}</td>
+                        <td>{{ item.nomeUsuario || '---' }}</td>
+                        <td>
+                            <div [innerHTML]="item.titulo || '---'"></div>
+                        </td>
+                        <td>
+                            <a [href]="getYouTubeUrl(item.videoId)" target="_blank" rel="noopener noreferrer">
+                                Ver Vídeo
+                            </a>
+                        </td>
+                        <td>{{ formatarData(item.horarioCadastro) }}</td>
+                        <td>{{ formatarData(item.horarioExibicao) }}</td>
+                        <td>
+                            <button
+                                *ngIf="isPending(item)"
+                                type="button"
+                                class="btn-cancelar"
+                                (click)="cancelarMusica(item)">
+                                Remover / Avisar
+                            </button>
 
-                <tr *ngFor="let item of logData">
-                    <td>{{ item.nomeUsuario }}</td>
-                    <td [innerHTML]="item.titulo"></td>
-                    <td>
-                        <a [href]="getYouTubeUrl(item.videoId)" target="_blank">
-                            Ver Vídeo (ID: {{ item.videoId }})
-                        </a>
-                    </td>
-                    <td>{{ formatarData(item.horarioCadastro) }}</td>
-                    <td>{{ formatarData(item.horarioExibicao) }}</td>
-                </tr>
-            </tbody>
-        </table>
+                            <div *ngIf="item.motivoCancelamento" style="color: #dc3545; font-size: 0.85em; font-weight: bold;">
+                                Removida: {{ item.motivoCancelamento }}
+                            </div>
+
+                            <span *ngIf="item.horarioExibicao && !item.motivoCancelamento" class="status-played">
+                                Já tocou
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <ng-template #semFilaAtiva>
+            <div class="empty-state">Nenhuma música atualmente na fila.</div>
+        </ng-template>
+
+        <div *ngIf="getHistoricoTocado().length > 0">
+            <h3>Já tocadas</h3>
+            <table class="log-table">
+                <thead>
+                    <tr>
+                        <th (click)="ordenarPor('ipUsuario')" class="sortable">
+                            IP <span class="sort-icon">{{ obterIconeOrdenacao('ipUsuario') }}</span>
+                        </th>
+                        <th (click)="ordenarPor('nomeUsuario')" class="sortable">
+                            Utilizador <span class="sort-icon">{{ obterIconeOrdenacao('nomeUsuario') }}</span>
+                        </th>
+                        <th (click)="ordenarPor('titulo')" class="sortable">
+                            Música (Título) <span class="sort-icon">{{ obterIconeOrdenacao('titulo') }}</span>
+                        </th>
+                        <th>Link do Vídeo</th>
+                        <th (click)="ordenarPor('horarioCadastro')" class="sortable">
+                            Hora Cadastro <span class="sort-icon">{{ obterIconeOrdenacao('horarioCadastro') }}</span>
+                        </th>
+                        <th (click)="ordenarPor('horarioExibicao')" class="sortable">
+                            Hora Exibição <span class="sort-icon">{{ obterIconeOrdenacao('horarioExibicao') }}</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let item of getHistoricoTocado()">
+                        <td>{{ getIpUsuario(item) }}</td>
+                        <td>{{ item.nomeUsuario || '---' }}</td>
+                        <td>
+                            <div [innerHTML]="item.titulo || '---'"></div>
+                        </td>
+                        <td>
+                            <a [href]="getYouTubeUrl(item.videoId)" target="_blank" rel="noopener noreferrer">
+                                Ver Vídeo
+                            </a>
+                        </td>
+                        <td>{{ formatarData(item.horarioCadastro) }}</td>
+                        <td>{{ formatarData(item.horarioExibicao) }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div *ngIf="getFilaAtiva().length === 0 && getHistoricoTocado().length === 0" class="empty-state">
+            Nenhuma música registada nos últimos 15 dias.
+        </div>
     </div>
 </div>

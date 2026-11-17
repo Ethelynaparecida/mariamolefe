@@ -35,7 +35,7 @@ export class LoginService {
   }
 
   fazerLogout(): void {
-    const userId = this.getUserId();
+    const userId = this.getUserIdentifier();
     if (userId) {
       this.apiService.removeUserSong(userId).subscribe({
         next: () =>
@@ -83,12 +83,12 @@ export class LoginService {
     return !isNaN(posNum) && posNum >= 0;
   }
 
-  private getUserId(): string | null {
+  private getUserIdentifier(): string | null {
     const userJson = localStorage.getItem(this.USER_STORAGE_KEY);
     if (userJson) {
       try {
         const user = JSON.parse(userJson);
-                return user.id;
+        return user.telefone || user.id || null;
       } catch (e) {
         return null;
       }
